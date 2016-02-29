@@ -28,11 +28,9 @@ ALA.ChartConstants = {
 
 ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
-    var self = this;
+    Doughnut = function (query, facetQueries, queryContext, facet, title){
 
-    Doughnut = function (query, facetQueries, queryContext, facet){
-
-        var divId = createCanvasAndLegend(facet);
+        var divId = createCanvasAndLegend(facet, title);
 
         wsCallAndRender(query, facet, facetQueries, queryContext, function(data){
 
@@ -49,7 +47,12 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             var $canvas = $('#' + divId).find('canvas');
             var ctx = $canvas.get(0).getContext("2d");
 
-            var doughnut = new Chart(ctx).Doughnut(items, { responsive: true, legendTemplate: ALA.ChartConstants.legendTemplate });
+            var doughnut = new Chart(ctx).Doughnut(items, {
+                responsive: true,
+                multiTooltipTemplate: "Chart title",
+                legendTemplate: ALA.ChartConstants.legendTemplate
+            });
+
             $('#' + divId).find('.chart-legend').get(0).innerHTML = doughnut.generateLegend();
 
             $canvas.click (
@@ -62,9 +65,9 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         });
     }
 
-    HorizBar = function (query, facetQueries, queryContext, facet){
+    HorizBar = function (query, facetQueries, queryContext, facet, title){
 
-        var divId = createCanvasAndLegend(facet);
+        var divId = createCanvasAndLegend(facet, title);
 
         wsCallAndRender(query, facet, facetQueries, queryContext, function(data){
 
@@ -113,9 +116,9 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         });
     }
 
-    Bar = function (query, facetQueries, queryContext, facet){
+    Bar = function (query, facetQueries, queryContext, facet, title){
 
-        var divId = createCanvasAndLegend(facet);
+        var divId = createCanvasAndLegend(facet, title);
 
         wsCallAndRender(query, facet, facetQueries, queryContext, function(data){
 
@@ -183,36 +186,27 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         });
     }
 
-    function createCanvas(parentDivId, facet){
-        var canvasId = facet + '-chart';
-        var $canvas = $('<canvas/>'); 
-        var $topDiv = $('<div/>');  
-
-        var $div = $('<div/>').addClass('chart').append($('<canvas/>').attr('id', facet + '-chart'));
-        $('#' + chartsDivId).append($div)
-        return canvasId;
-    }
-
-    function createCanvasAndLegend(facet){
+    function createCanvasAndLegend(facet, title){
         var divId = facet + '-chart';
         var $topDiv = $('<div/>').addClass('chart').attr('id', divId);
+        var $title = $('<h3/>').addClass('chart-title').html(title);
         var $canvas = $('<canvas/>').addClass('chart-canvas');
         var $legend = $('<div/>').addClass('chart-legend').addClass('ala-doughnut-legend');
-        $topDiv.append($canvas).append($legend)
-        $('#' + chartsDivId).append($topDiv)
+        $topDiv.append($title).append($canvas).append($legend);
+        $('#' + chartsDivId).append($topDiv);
         return divId;
     }
 
     //create the charts    
-    $.each(chartOptions.charts, function(facet, value){
-        if(value.chartType == "doughnut"){
-            Doughnut(chartOptions.query, "", chartOptions.queryContext, facet);
+    $.each(chartOptions.charts, function(facet, chartConfig){
+        if(chartConfig.chartType == "doughnut"){
+            Doughnut(chartOptions.query, "", chartOptions.queryContext, facet, chartConfig.title);
         }
-        if(value.chartType == "bar"){
-            Bar(chartOptions.query, "", chartOptions.queryContext, facet);
+        if(chartConfig.chartType == "bar"){
+            Bar(chartOptions.query, "", chartOptions.queryContext, facet, chartConfig.title);
         }
-        if(value.chartType == "horizontal-bar"){
-            HorizBar(chartOptions.query, "", chartOptions.queryContext, facet);
+        if(chartConfig.chartType == "horizontal-bar"){
+            HorizBar(chartOptions.query, "", chartOptions.queryContext, facet, chartConfig.title);
         }
     });
 }
