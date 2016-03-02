@@ -11,11 +11,11 @@ ALA.ChartConstants = {
     highlightColor: '#FF0000',
     colors : [
         "#8B2635",
-        "#D2D4C8", 
+        "#D2D4C8",
         "#D3EFBD",
         "#BCE784",
         "#5DD39E",
-        "#348AA7", 
+        "#348AA7",
         "#525174",
         "#513B56",
         "#656839",
@@ -36,10 +36,16 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
             var items = [];
             $.each( data.facetResults[0].fieldResult, function(key, result) {
+
+                console.log("key: " + key  + " = " + ( (key + 1) % (ALA.ChartConstants.colors.length-1) )) ;
+                var segmentColor = ALA.ChartConstants.colors[(key + 1) % (ALA.ChartConstants.colors.length-1)];
+                var segmentHighlight = blendColors(segmentColor, "#FFFFFF", 85);
+                console.log("key: " + key + " " + segmentColor + " " + segmentHighlight);
+
                 items.push({
                     value: result.count,
-                    color: ALA.ChartConstants.colors[(key + 1) % ALA.ChartConstants.colors.length-1],
-                    highlight: ALA.ChartConstants.highlightColor,
+                    color: segmentColor,
+                    highlight: segmentHighlight,
                     label: result.label
                 });
             });
@@ -76,7 +82,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             var datastructure = {
                 labels : [],
                 datasets : [{
-                    label: "My dataset",
+                    label: title,
                     fillColor: "rgba(151,187,205,0.5)",
                     strokeColor: "rgba(151,187,205,0.8)",
                     highlightFill: "rgba(151,187,205,0.75)",
@@ -88,7 +94,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             $.each( data.facetResults[0].fieldResult, function(key, result) {
 
                 var prettifiedLabel = result.label.substring(0, 80);
-                if(result.label.trim() == "")	{
+                if(result.label.trim() == "")   {
                     prettifiedLabel = "Not available";
                 }
 
@@ -128,7 +134,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             var datastructure = {
                 labels : [],
                 datasets : [{
-                    label: "My Second dataset",
+                    label: title,
                     fillColor: "rgba(151,187,205,0.5)",
                     strokeColor: "rgba(151,187,205,0.8)",
                     highlightFill: "rgba(151,187,205,0.75)",
@@ -141,7 +147,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             $.each( data.facetResults[0].fieldResult, function(key, result) {
 
                 var prettifiedLabel = result.label.substring(0, 80);
-                if(result.label.trim() == "")	{
+                if(result.label.trim() == "")   {
                     prettifiedLabel = "Not available";
                 }
 
@@ -171,9 +177,10 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
     function wsCallAndRender(query, facet, facetQueries, queryContext, dataCallback){
 
-        var queryUrl = chartOptions.biocacheServiceUrl + "/occurrences/search.json?q=" + 
+        var queryUrl = chartOptions.biocacheServiceUrl + "/occurrences/search.json?q=" +
             query + "&pageSize=0&fsort=index&facets=" +
             facet + "&qc=" + queryContext;
+
         $.ajax({
             url: queryUrl,
             type: 'GET',
@@ -184,6 +191,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 dataCallback(data);
             }
         });
+    }
+
+    function blendColors(c0, c1, p) {
+        var f=parseInt(c0.slice(1),16),t=parseInt(c1.slice(1),16),R1=f>>16,G1=f>>8&0x00FF,B1=f&0x0000FF,R2=t>>16,G2=t>>8&0x00FF,B2=t&0x0000FF;
+        return "#"+(0x1000000+(Math.round((R2-R1)*p)+R1)*0x10000+(Math.round((G2-G1)*p)+G1)*0x100+(Math.round((B2-B1)*p)+B1)).toString(16).slice(1);
     }
 
     function createCanvasAndLegend(facet, title){
