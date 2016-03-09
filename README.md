@@ -47,7 +47,7 @@ Heres an example
 
 ## Configuration options
 
-* title:
+* title: The title to display over the top of this chart
 * chartType: one of "horizontal-bar", "bar" or "doughnut"
 * emptyValueMsg: What to display for a field name if non available,
 * hideEmptyValues : Whether to hide empty values e.g. month not supplied
