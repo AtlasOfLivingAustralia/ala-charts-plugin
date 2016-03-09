@@ -1,5 +1,5 @@
 class AlaChartsPluginGrailsPlugin {
-    def version = "1.0"
+    def version = "1.1-SNAPSHOT"
     def grailsVersion = "2.3 > *"
     def pluginExcludes = [
             "grails-app/views/error.gsp"
