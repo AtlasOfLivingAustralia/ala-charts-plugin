@@ -1,9 +1,23 @@
 ###    [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/ala-charts-plugin.svg?branch=master)](https://travis-ci.org/AtlasOfLivingAustralia/ala-charts-plugin)
 
+## Why ?
+
+Charts are used in multiple places within the Atlas.
+This is an attempt to standardise the display of chart information
+across the ALA. This plugin is currently only supporting charts
+on top of biocache services but could be extended to include other
+services (e.g. logger services, ecodata services).
+
 ## Usage instructions
 
 To use the plugin you need to set up a external JSON configuration file for the charts.
-Heres an example
+The configuration file should be placed in the location:
+
+```
+/data/{appName}/config/charts.json
+```
+
+Heres an example:
 
 ```
 { biocache : {
@@ -51,6 +65,7 @@ Heres an example
 * chartType: one of "horizontal-bar", "bar" or "doughnut"
 * emptyValueMsg: What to display for a field name if non available,
 * hideEmptyValues : Whether to hide empty values e.g. month not supplied
+* filter: An additional query filter to be used in the search
 
 For biocache charts, the name of the chart must be an indexed and public field.
 
@@ -63,7 +78,7 @@ To use the grails taglib to render the charts:
     <charts:biocache
         biocacheServiceUrl="http://biocache.ala.org.au/ws"
         biocacheWebappUrl="http://biocache.ala.org.au"
-        q="Macropus rufus"
+        q="Macropus"
         qc=""
         fq=""
     />    
