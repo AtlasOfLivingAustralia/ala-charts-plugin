@@ -4,6 +4,9 @@ import grails.converters.JSON
 import grails.util.Metadata
 import groovy.json.JsonSlurper
 
+/**
+ * Taglib for rendering charts
+ */
 class ChartsTagLib {
 
     static namespace = "charts"
