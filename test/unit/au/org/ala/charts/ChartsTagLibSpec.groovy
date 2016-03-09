@@ -6,8 +6,8 @@ import spock.lang.Specification
 /**
  * See the API for {@link grails.test.mixin.web.GroovyPageUnitTestMixin} for usage instructions
  */
-@TestFor(BiocacheChartsTagLib)
-class BiocacheChartsTagLibSpec extends Specification {
+@TestFor(ChartsTagLib)
+class ChartsTagLibSpec extends Specification {
 
     def setup() {
     }

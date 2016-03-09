@@ -3,21 +3,24 @@ package au.org.ala.charts
 import grails.converters.JSON
 import groovy.json.JsonSlurper
 
-class BiocacheChartsTagLib {
+class ChartsTagLib {
 
     static namespace = "charts"
+
+    static chartsConfig = null
 
     /**
      * Render the specified charts
      */
     def biocache = { attrs ->
 
-        def appName = grails.util.Metadata.current.'app.name'
+        if(chartsConfig == null){
+            def appName = grails.util.Metadata.current.'app.name'
+            def configPath = "/data/${appName}/config/charts.json"
 
-        def configPath = "/data/${appName}/config/charts.json"
-
-        def js  = new JsonSlurper()
-        def chartsConfig = js.parse(new FileReader(new File(configPath)))
+            def js  = new JsonSlurper()
+            chartsConfig = js.parse(new FileReader(new File(configPath)))
+        }
 
         def jsonConfig = [
             biocacheServiceUrl : attrs.biocacheServiceUrl,  // 'http://records-ws.als.scot'
@@ -25,7 +28,7 @@ class BiocacheChartsTagLib {
             query : attrs.q ?: '*:*',                       // 'lsid:\"${tc.taxonConcept.guid}\"'
             queryContext : attrs.qc ?: '',                  // 'cl2:Scotland'
             facetQueries : attrs.fq ?: [],
-            charts : chartsConfig
+            charts : chartsConfig.biocache
         ]
 
         out << "var chartConfig = ${(jsonConfig as JSON).toString()};"
