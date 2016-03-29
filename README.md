@@ -20,7 +20,7 @@ The configuration file should be placed in the location:
 Heres an example:
 
 ```
-{ biocache : {
+{ "biocache" : {
     "cl1000" : {
         "title": "By habitat",
         "chartType": "doughnut",
