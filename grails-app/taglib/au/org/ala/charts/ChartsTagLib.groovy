@@ -28,7 +28,8 @@ class ChartsTagLib {
         ]
 
         out << "var chartConfig = ${(jsonConfig as JSON).toString()};"
-        out << "var charts = ALA.BiocacheCharts('charts', chartConfig);"
+        if (attrs?.autoLoad != 'false')
+            out << "var charts = ALA.BiocacheCharts('charts', chartConfig);"
     }
 
     private Object getChartConfig() {
