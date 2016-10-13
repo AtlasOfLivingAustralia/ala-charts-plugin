@@ -286,11 +286,9 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             valueType = "count";
         }
 
-        // var xranges = (valueRanges && valueRanges.length >0 )? "xranges=" + valueRanges.join() : ""
-
         var xranges =  (valueRanges && valueRanges.length>0) ? "&xranges=" + valueRanges : ""
+
         //default search service
-        debugger;
         var queryUrl = chartOptions.biocacheServiceUrl + "/chart?q=" + query +
             "&x=" + facet + xranges +"&qc=" + queryContext + valueParam;
 
