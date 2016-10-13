@@ -1,3 +1,10 @@
 .ala-doughnut-legend ul { list-style: none;  list-style-type: none; }
 .ala-doughnut-legend ul li { list-style: none;  list-style-type: none; }
-.ala-doughnut-legend li span { width: 5px; height:30px; padding-left:10px; padding-right:10px; margin-right:10px; border-radius: 5px;} 
+.ala-doughnut-legend li span { width: 5px; height:30px; padding-left:10px; padding-right:10px; margin-right:10px; border-radius: 5px;}
+.chart-add-textarea { width: 150px; height: 150px; }
+.chart-add-label { width: 200px; display: inline-block; }
+.chart-add-group { width: 100%; }
+.chart-add { width: 100%; }
+.chart-add-facet { width: 400px; }
+.chart-add-value-facet { width: 400px; }
+.chart-delete { float: left; margin-top: -20px; }

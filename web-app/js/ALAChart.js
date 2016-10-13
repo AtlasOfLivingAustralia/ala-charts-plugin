@@ -82,21 +82,21 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @param chartConfig
      * @constructor
      */
-    Doughnut = function (query, facetQueries, queryContext, facet, chartConfig){
+    Doughnut = function (query, facetQueries, queryContext, facet, valueType, valueFacet, chartConfig){
 
         var divId = createCanvasAndLegend(facet, chartConfig.title);
 
-        wsCallAndRender(query, facet, facetQueries, queryContext, chartConfig.filter, function(data){
+        wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
 
             var items = [];
-            $.each( data.facetResults[0].fieldResult, function(key, result) {
+            $.each( data, function(key, result) {
 
                 var segmentColor = ALA.ChartConstants.colors[(key + 1) % (ALA.ChartConstants.colors.length-1)];
                 var segmentHighlight = blendColors(segmentColor, "#FFFFFF", 85);
 
                 if(!(chartConfig.hideEmptyValues && result.label == "")){
                     items.push({
-                        value: result.count,
+                        value: result[type],
                         color: segmentColor,
                         highlight: segmentHighlight,
                         label: result.label
@@ -139,7 +139,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         var divId = createCanvasAndLegend(facet, chartConfig.title);
 
-        wsCallAndRender(query, facet, facetQueries, queryContext, chartConfig.filter, function(data){
+        wsCallAndRender(query, facet, facetQueries, queryContext, chartConfig.filter, function(data, type){
 
             var labelToFq = {};
 
@@ -155,7 +155,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 }]
             };
 
-            $.each( data.facetResults[0].fieldResult, function(key, result) {
+            $.each( data, function(key, result) {
 
                 if(!(chartConfig.hideEmptyValues && result.label == "")){
                     var prettifiedLabel = result.label.substring(0, 80);
@@ -164,7 +164,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                     }
 
                     datastructure.labels.push(prettifiedLabel);
-                    datastructure.datasets[0].data.push(result.count);
+                    datastructure.datasets[0].data.push(result[type]);
 
                     if(result.fq){
                         labelToFq[prettifiedLabel] = result.fq;
@@ -198,11 +198,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @param chartConfig
      * @constructor
      */
-    Bar = function (query, facetQueries, queryContext, facet, chartConfig){
+    Bar = function (query, facetQueries, queryContext, facet, valueType, valueFacet, chartConfig){
 
         var divId = createCanvasAndLegend(facet, chartConfig.title);
 
-        wsCallAndRender(query, facet, facetQueries, queryContext, chartConfig.filter, function(data){
+        wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
 
             var labelToFq = {};
 
@@ -220,7 +220,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             };
 
             //compile results from WS call
-            $.each( data.facetResults[0].fieldResult, function(key, result) {
+            $.each( data, function(key, result) {
 
                 if(!(chartConfig.hideEmptyValues && result.label == "")){
                     var prettifiedLabel = result.label.substring(0, 80);
@@ -229,7 +229,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                     }
 
                     datastructure.labels.push(prettifiedLabel);
-                    datastructure.datasets[0].data.push(result.count);
+                    datastructure.datasets[0].data.push(result[type]);
 
                     if(result.fq){
                         labelToFq[prettifiedLabel] = result.fq;
@@ -258,20 +258,30 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      *
      * @param query
      * @param facet
+     * @param valueType
+     * @param valueFacet
      * @param facetQueries
      * @param queryContext
      * @param additionalFilter
      * @param dataCallback the callback function to use if data available
      */
-    function wsCallAndRender(query, facet, facetQueries, queryContext, additionalFilter, dataCallback){
+    function wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, additionalFilter, dataCallback){
 
         if(query == "" || query == undefined) {
             query = "*:*";
         }
 
-        var queryUrl = chartOptions.biocacheServiceUrl + "/occurrences/search.json?q=" +
-            query + "&pageSize=0&flimit=-1&fsort=index&facets=" +
-            facet + "&qc=" + queryContext;
+        console.log('calling chart')
+        var valueParam = "";
+        if (valueType && valueType != "count") {
+            valueParam = "&stats=" + valueFacet;
+        } else {
+            valueType = "count";
+        }
+
+        //default search service
+        var queryUrl = chartOptions.biocacheServiceUrl + "/chart?q=" + query +
+            "&x=" + facet + "&qc=" + queryContext + valueParam;
 
         if(additionalFilter) {
             queryUrl = queryUrl + '&' + additionalFilter;
@@ -284,8 +294,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 alert("error");
             },
             success: function(data) {
-                if(data && data.facetResults && data.facetResults.length > 0){
-                    dataCallback(data);
+                if(data && data.length > 0){
+                    dataCallback(data, valueType);
                 }
             }
         });
@@ -296,6 +306,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         return "#"+(0x1000000+(Math.round((R2-R1)*p)+R1)*0x10000+(Math.round((G2-G1)*p)+G1)*0x100+(Math.round((B2-B1)*p)+B1)).toString(16).slice(1);
     }
 
+    var chartCounter = 0;
+
     /**
      * Create the canvas and legend elements.
      *
@@ -304,26 +316,136 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @returns {string}
      */
     function createCanvasAndLegend(facet, title){
-        var divId = facet + '-chart';
+        var divId = facet + '-chart-' + chartCounter;
+        chartCounter++;
         var $topDiv = $('<div/>').addClass('chart').attr('id', divId);
         var $title = $('<h3/>').addClass('chart-title').html(title);
         var $canvas = $('<canvas/>').addClass('chart-canvas');
         var $legend = $('<div/>').addClass('chart-legend').addClass('ala-doughnut-legend');
-        $topDiv.append($title).append($canvas).append($legend);
+        var $delete = $('<button>delete</button>').addClass('chart-delete').addClass('btn').
+            addClass('btn-xs').addClass('btn-mini').addClass('btn-danger').click(deleteChart);
+        $topDiv.append($title).append($delete).append($canvas).append($legend);
         $('#' + chartsDivId).append($topDiv);
         return divId;
     }
 
+    function deleteChart(event) {
+        $(event.target).parent().detach()
+    }
+
+    createControl();
+
     //create the charts
     $.each(chartOptions.charts, function(facet, chartConfig){
-        if(chartConfig.chartType == "doughnut"){
-            Doughnut(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig);
-        }
-        if(chartConfig.chartType == "bar"){
-            Bar(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig);
-        }
-        if(chartConfig.chartType == "horizontal-bar"){
-            HorizBar(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig);
-        }
+       createChart(facet, chartConfig)
     });
+
+    function createChart(facet, chartConfig) {
+        console.log(facet)
+        console.log(chartConfig)
+        if (chartConfig.chartType == "doughnut") {
+            Doughnut(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig.valueType, chartConfig.valueFacet, chartConfig);
+        }
+        if (chartConfig.chartType == "bar") {
+            Bar(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig.valueType, chartConfig.valueFacet, chartConfig);
+        }
+        if (chartConfig.chartType == "horizontal-bar") {
+            HorizBar(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig.valueType, chartConfig.valueFacet, chartConfig);
+        }
+    }
+
+    //create add chart control
+    function createControl() {
+        var control = $('<div/>').addClass('chart-add');
+
+        var title = $('<div/>').addClass('chart-add-group').
+            append($('<label>Title</label>').addClass('chart-add-label')).
+            append($('<input/>').addClass('chart-add-title').val('My chart'));
+
+        var valueTypeSelect = $('<select/>').addClass('chart-add-value-type');
+        var valueType =$('<div/>').addClass('chart-add-group').
+            append($('<label>Value</label>').addClass('chart-add-label')).
+            append(valueTypeSelect);
+        $([ 'count', 'sum', 'max', 'min', 'mean', 'missing', 'stddev' ]).each(function (key, value) {
+            valueTypeSelect.append($("<option/>").attr('value', value).text(value));
+        });
+
+        var valueFacetSelect = $('<select/>').addClass('chart-add-value-facet');
+        var valueFacet = $('<div/>').addClass('chart-add-group').
+            append($('<label>Value facet (when not "count")</label>').addClass('chart-add-label')).
+            append(valueFacetSelect);
+
+        var facetSelect = $('<select/>').addClass('chart-add-facet');
+        var facet = $('<div/>').addClass('chart-add-group').
+            append($('<label>Facet</label>').addClass('chart-add-label')).
+            append(facetSelect);
+
+        var button = $('<button>+</button>').addClass('chart-add-button').click(addChart);
+
+        var chartTypeSelect = $('<select/>').addClass('chart-add-chart-type');
+        var chartType =$('<div/>').addClass('chart-add-group').
+            append($('<label>Chart type</label>').addClass('chart-add-label')).
+            append(chartTypeSelect);
+        $([ 'bar', 'horizontal-bar', 'doughnut' ]).each(function (key, value) {
+            chartTypeSelect.append($("<option/>").attr('value', value).text(value));
+        });
+
+        var emptyValueMsg = $('<div/>').addClass('chart-add-group').
+            append($('<label>Empty value message</label>').addClass('chart-add-label')).
+            append($('<input/>').addClass('chart-add-empty-value-msg').val('Undefined'));
+
+        var hideEmptyValues = $('<div/>').addClass('chart-add-group').
+            append($('<label>Hide empty values</label>').addClass('chart-add-label')).
+            append($('<input/>').addClass('chart-hide-empty-values').attr('type', 'checkbox').prop('checked', true));
+
+        control.append(title);
+        control.append(chartType);
+        control.append(facet);
+        control.append(valueType);
+        control.append(valueFacet);
+        control.append(button);
+        control.append(hideEmptyValues);
+        control.append(emptyValueMsg);
+        control.append(button);
+
+        $('#' + chartsDivId).append(control);
+
+        $.ajax({
+            url: chartOptions.biocacheServiceUrl + '/index/fields',
+            type: 'GET',
+            error: function(xhr, status, error) {
+                alert("error");
+            },
+            success: function(data) {
+                if(data && data.length > 0){
+
+                    $(data).each(function (key, value) {
+                        if (value.indexed) {
+                            facetSelect.append($("<option/>").attr('value', value.name).text(value.name));
+
+                            if (value.dataType == 'int' || value.dataType == 'double') {
+                                valueFacetSelect.append($("<option/>").attr('value', value.name).text(value.name));
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    function addChart() {
+        var chartOptions = {
+            title: $('.chart-add-title').val(),
+            facet: $('.chart-add-facet').val(),
+            valueFacet: $('.chart-add-value-facet').val(),
+            valueType: $('.chart-add-value-type').val(),
+            chartType: $('.chart-add-chart-type').val(),
+            emptyValueMsg: $('.chart-add-empty-value-msg').val(),
+            hideEmptyValues: $('.chart-add-hide-empty-values').val(),
+        }
+
+        console.log(chartOptions)
+
+        createChart(chartOptions.facet, chartOptions);
+    }
 }
