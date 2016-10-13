@@ -84,7 +84,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      */
     var Doughnut = function (query, facetQueries, queryContext, facet, valueType, valueFacet, chartConfig){
 
-        var divId = createCanvasAndLegend(facet, chartConfig.title);
+        var divId = createCanvasAndLegend(facet, chartConfig.title, chartConfig);
 
         wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
 
@@ -94,6 +94,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 var segmentColor = ALA.ChartConstants.colors[(key + 1) % (ALA.ChartConstants.colors.length-1)];
                 var segmentHighlight = blendColors(segmentColor, "#FFFFFF", 85);
 
+                if (result.label == null) result.label = "";
                 if(!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
                     var prettifiedLabel = result.label.substring(0, 80);
                     if(result.label.trim() == "")   {
@@ -141,7 +142,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      */
     var HorizBar = function (query, facetQueries, queryContext, facet, valueType, valueFacet, chartConfig){
 
-        var divId = createCanvasAndLegend(facet, chartConfig.title);
+        var divId = createCanvasAndLegend(facet, chartConfig.title, chartConfig);
 
         wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
 
@@ -161,6 +162,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
             $.each( data, function(key, result) {
 
+                if (result.label == null) result.label = "";
                 if(!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0){
                     var prettifiedLabel = result.label.substring(0, 80);
                     if(result.label.trim() == "")   {
@@ -204,7 +206,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      */
     var Bar = function (query, facetQueries, queryContext, facet, valueType, valueFacet, chartConfig){
 
-        var divId = createCanvasAndLegend(facet, chartConfig.title);
+        var divId = createCanvasAndLegend(facet, chartConfig.title, chartConfig);
 
         wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
 
@@ -226,6 +228,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             //compile results from WS call
             $.each( data, function(key, result) {
 
+                if (result.label == null) result.label = "";
                 if(!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
                     var prettifiedLabel = result.label.substring(0, 80);
                     if(result.label.trim() == "")   {
@@ -319,8 +322,10 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @param title
      * @returns {string}
      */
-    var createCanvasAndLegend = function(facet, title){
+    var createCanvasAndLegend = function(facet, title, chartConfig){
         var divId = facet + '-chart-' + chartCounter;
+        chartConfig.divId = divId
+
         chartCounter++;
         var $topDiv = $('<div/>').addClass('chart').attr('id', divId);
         var $title = $('<h3/>').addClass('chart-title').html(title);
@@ -339,11 +344,18 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
     }
 
     function deleteChart(event) {
-        if (chartOptions.chartControlsCallback) {
-            chartOptions.chartControlsCallback(chartOptions)
+        var divId = $(event.target).parent('.chart').attr('id');
+        for (key in chartOptions.charts) {
+            if (chartOptions.charts[key].divId == divId) {
+                delete chartOptions.charts[key];
+            }
         }
 
-        $(event.target).parent().detach()
+        if (chartOptions.chartControlsCallback) {
+            chartOptions.chartControlsCallback(chartOptions);
+        }
+
+        $(event.target).parent().detach();
     }
 
     var createChart = function(facet, chartConfig) {
@@ -386,7 +398,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             append($('<label>Facet</label>').addClass('chart-add-label')).
             append(facetSelect);
 
-        var button = $('<button>+</button>').addClass('chart-add-button').click(addChart);
+        var button = $('<button>Add new chart</button>').addClass('chart-add-button').click(addChart);
 
         var chartTypeSelect = $('<select/>').addClass('chart-add-chart-type');
         var chartType =$('<div/>').addClass('chart-add-group').
@@ -447,14 +459,17 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             valueType: $('.chart-add-value-type').val(),
             chartType: $('.chart-add-chart-type').val(),
             emptyValueMsg: $('.chart-add-empty-value-msg').val(),
-            hideEmptyValues: $('.chart-add-hide-empty-values').val()
+            hideEmptyValues: $('.chart-hide-empty-values').val() == 'on'
         }
 
         console.log(options);
 
         createChart(options.facet, options);
 
-        chartOptions.charts[options.facet] = options;
+        //save with a unique name
+        var i = 0
+        while (chartOptions.charts[i + '*' + options.facet] !== undefined) i++;
+        chartOptions.charts[i + '*' + options.facet] = options;
 
         if (chartOptions.chartControlsCallback) {
             chartOptions.chartControlsCallback(chartOptions);
@@ -467,6 +482,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
     //create the charts
     $.each(chartOptions.charts, function(facet, chartConfig){
-        createChart(facet, chartConfig)
+        //support charts where facet is defined in chartConfig
+        if (chartConfig.facet === undefined) {
+            createChart(facet, chartConfig)
+        } else {
+            createChart(chartConfig.facet, chartConfig)
+        }
     });
 }
