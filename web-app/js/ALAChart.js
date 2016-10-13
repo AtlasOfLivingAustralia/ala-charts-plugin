@@ -82,11 +82,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @param chartConfig
      * @constructor
      */
-    var Doughnut = function (query, facetQueries, queryContext, facet, valueType, valueFacet, chartConfig){
+    var Doughnut = function (query, facetQueries, queryContext, facet, valueRanges, valueType, valueFacet, chartConfig){
 
         var divId = createCanvasAndLegend(facet, chartConfig.title);
 
-        wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
+        wsCallAndRender(query, facet, valueRanges, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
 
             var items = [];
             $.each( data, function(key, result) {
@@ -139,11 +139,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @param chartConfig
      * @constructor
      */
-    var HorizBar = function (query, facetQueries, queryContext, facet, valueType, valueFacet, chartConfig){
+    var HorizBar = function (query, facetQueries, queryContext, facet, valueRanges, valueType, valueFacet, chartConfig){
 
         var divId = createCanvasAndLegend(facet, chartConfig.title);
 
-        wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
+        wsCallAndRender(query, facet, valueRanges, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
 
             var labelToFq = {};
 
@@ -202,11 +202,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @param chartConfig
      * @constructor
      */
-    var Bar = function (query, facetQueries, queryContext, facet, valueType, valueFacet, chartConfig){
+    var Bar = function (query, facetQueries, queryContext, facet, valueRanges, valueType, valueFacet, chartConfig){
 
         var divId = createCanvasAndLegend(facet, chartConfig.title);
 
-        wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
+        wsCallAndRender(query, facet, valueRanges, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type, valueRanges){
 
             var labelToFq = {};
 
@@ -269,7 +269,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @param additionalFilter
      * @param dataCallback the callback function to use if data available
      */
-    var wsCallAndRender = function(query, facet, valueType, valueFacet, facetQueries, queryContext, additionalFilter, dataCallback){
+    var wsCallAndRender = function(query, facet, valueRanges, valueType, valueFacet, facetQueries, queryContext, additionalFilter, dataCallback){
 
         if(query == "" || query == undefined) {
             query = "*:*";
@@ -283,9 +283,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             valueType = "count";
         }
 
+        // var xranges = (valueRanges && valueRanges.length >0 )? "xranges=" + valueRanges.join() : ""
+
+        var xranges =  (valueRanges && valueRanges.length>0) ? "&xranges=" + valueRanges : ""
         //default search service
+        debugger;
         var queryUrl = chartOptions.biocacheServiceUrl + "/chart?q=" + query +
-            "&x=" + facet + "&qc=" + queryContext + valueParam;
+            "&x=" + facet + xranges +"&qc=" + queryContext + valueParam;
 
         if(additionalFilter) {
             queryUrl = queryUrl + '&' + additionalFilter;
@@ -299,7 +303,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             },
             success: function(data) {
                 if(data && data.length > 0){
-                    dataCallback(data, valueType);
+                    dataCallback(data, valueType, xranges != "" );
                 }
             }
         });
@@ -350,13 +354,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         console.log(facet)
         console.log(chartConfig)
         if (chartConfig.chartType == "doughnut") {
-            Doughnut(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig.valueType, chartConfig.valueFacet, chartConfig);
+            Doughnut(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig.valueRanges, chartConfig.valueType, chartConfig.valueFacet, chartConfig);
         }
         if (chartConfig.chartType == "bar") {
-            Bar(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig.valueType, chartConfig.valueFacet, chartConfig);
+            Bar(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig.valueRanges, chartConfig.valueType, chartConfig.valueFacet, chartConfig);
         }
         if (chartConfig.chartType == "horizontal-bar") {
-            HorizBar(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig.valueType, chartConfig.valueFacet, chartConfig);
+            HorizBar(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, facet, chartConfig.valueRanges, chartConfig.valueType, chartConfig.valueFacet, chartConfig);
         }
     }
 
@@ -386,7 +390,9 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             append($('<label>Facet</label>').addClass('chart-add-label')).
             append(facetSelect);
 
-        var button = $('<button>+</button>').addClass('chart-add-button').click(addChart);
+        var valueRanges = $('<div/>').addClass('chart-add-group').
+        append($('<label>Value ranges</label>').addClass('chart-add-label')).
+        append($('<input/>').addClass('chart-add-value-ranges').val(''));
 
         var chartTypeSelect = $('<select/>').addClass('chart-add-chart-type');
         var chartType =$('<div/>').addClass('chart-add-group').
@@ -404,10 +410,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             append($('<label>Hide empty values</label>').addClass('chart-add-label')).
             append($('<input/>').addClass('chart-hide-empty-values').attr('type', 'checkbox').prop('checked', true));
 
+        var button = $('<button>+</button>').addClass('chart-add-button').click(addChart);
+
         control.append(title);
         control.append(chartType);
         control.append(facet);
         control.append(valueType);
+        control.append(valueRanges);
         control.append(valueFacet);
         control.append(button);
         control.append(hideEmptyValues);
@@ -447,7 +456,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             valueType: $('.chart-add-value-type').val(),
             chartType: $('.chart-add-chart-type').val(),
             emptyValueMsg: $('.chart-add-empty-value-msg').val(),
-            hideEmptyValues: $('.chart-add-hide-empty-values').val()
+            hideEmptyValues: $('.chart-add-hide-empty-values').val(),
+            valueRanges: $('.chart-add-value-ranges').val()
         }
 
         console.log(options);
