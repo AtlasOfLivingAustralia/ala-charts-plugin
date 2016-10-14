@@ -86,48 +86,60 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         var divId = createCanvasAndLegend(facet, chartConfig.title, chartConfig);
 
-        wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
+        if (chartConfig && !chartConfig.hideOnce) {
+            wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, divId, function (data, type) {
 
-            var items = [];
-            $.each( data, function(key, result) {
+                var items = [];
+                $.each(data, function (key, result) {
 
-                var segmentColor = ALA.ChartConstants.colors[(key + 1) % (ALA.ChartConstants.colors.length-1)];
-                var segmentHighlight = blendColors(segmentColor, "#FFFFFF", 85);
+                    var segmentColor = ALA.ChartConstants.colors[(key + 1) % (ALA.ChartConstants.colors.length - 1)];
+                    var segmentHighlight = blendColors(segmentColor, "#FFFFFF", 85);
 
-                if (result.label == null) result.label = "";
-                if(!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
-                    var prettifiedLabel = result.label.substring(0, 80);
-                    if(result.label.trim() == "")   {
-                        prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
+                    if (result.label == null) result.label = "";
+                    if (!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
+                        var prettifiedLabel = result.label.substring(0, 80);
+                        if (result.label.trim() == "") {
+                            prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
+                        }
+                        items.push({
+                            value: result[type],
+                            color: segmentColor,
+                            highlight: segmentHighlight,
+                            label: prettifiedLabel
+                        });
                     }
-                    items.push({
-                        value: result[type],
-                        color: segmentColor,
-                        highlight: segmentHighlight,
-                        label: prettifiedLabel
+                });
+
+                var $canvas = $('#' + divId).find('canvas');
+
+                if (items.length > 0) {
+                    var ctx = $canvas.get(0).getContext("2d");
+
+                    var doughnut = new Chart(ctx).Doughnut(items, {
+                        responsive: true,
+                        multiTooltipTemplate: chartConfig.title,
+                        legendTemplate: ALA.ChartConstants.legendTemplate
                     });
+
+                    $('#' + divId).find('.chart-legend').get(0).innerHTML = doughnut.generateLegend();
+
+                    $canvas.click(
+                        function (evt) {
+                            var activePoints = doughnut.getSegmentsAtEvent(evt);
+                            var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + query + "&fq=" + facet + ":" + activePoints[0].label;
+                            window.location.href = url;
+                        }
+                    );
+                } else {
+                    $canvas.parent().append($("<label>No data to display</label>").addClass('chart-no-data-label'));
+
+                    $canvas.parent().find('.chart-canvas').detach();
+                    $canvas.parent().find('.chart-legend').detach();
                 }
             });
-
-            var $canvas = $('#' + divId).find('canvas');
-            var ctx = $canvas.get(0).getContext("2d");
-
-            var doughnut = new Chart(ctx).Doughnut(items, {
-                responsive: true,
-                multiTooltipTemplate: chartConfig.title,
-                legendTemplate: ALA.ChartConstants.legendTemplate
-            });
-
-            $('#' + divId).find('.chart-legend').get(0).innerHTML = doughnut.generateLegend();
-
-            $canvas.click (
-                function(evt){
-                    var activePoints = doughnut.getSegmentsAtEvent(evt);
-                    var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + query + "&fq=" + facet + ":" + activePoints[0].label;
-                    window.location.href = url;
-                }
-            );
-        });
+        } else {
+            delete chartConfig.hideOnce
+        }
     }
 
     /**
@@ -144,55 +156,67 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         var divId = createCanvasAndLegend(facet, chartConfig.title, chartConfig);
 
-        wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
+        if (chartConfig && !chartConfig.hideOnce) {
+            wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, divId, function (data, type) {
 
-            var labelToFq = {};
+                var labelToFq = {};
 
-            var datastructure = {
-                labels : [],
-                datasets : [{
-                    label: chartConfig.title,
-                    fillColor: "rgba(151,187,205,0.5)",
-                    strokeColor: "rgba(151,187,205,0.8)",
-                    highlightFill: "rgba(151,187,205,0.75)",
-                    highlightStroke: "rgba(151,187,205,1)",
-                    data: []
-                }]
-            };
+                var datastructure = {
+                    labels: [],
+                    datasets: [{
+                        label: chartConfig.title,
+                        fillColor: "rgba(151,187,205,0.5)",
+                        strokeColor: "rgba(151,187,205,0.8)",
+                        highlightFill: "rgba(151,187,205,0.75)",
+                        highlightStroke: "rgba(151,187,205,1)",
+                        data: []
+                    }]
+                };
 
-            $.each( data, function(key, result) {
+                $.each(data, function (key, result) {
 
-                if (result.label == null) result.label = "";
-                if(!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0){
-                    var prettifiedLabel = result.label.substring(0, 80);
-                    if(result.label.trim() == "")   {
-                        prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
+                    if (result.label == null) result.label = "";
+                    if (!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
+                        var prettifiedLabel = result.label.substring(0, 80);
+                        if (result.label.trim() == "") {
+                            prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
+                        }
+
+                        datastructure.labels.push(prettifiedLabel);
+                        datastructure.datasets[0].data.push(result[type]);
+
+                        if (result.fq) {
+                            labelToFq[prettifiedLabel] = result.fq;
+                        } else {
+                            labelToFq[prettifiedLabel] = facet + ":" + result.label;
+                        }
                     }
+                });
 
-                    datastructure.labels.push(prettifiedLabel);
-                    datastructure.datasets[0].data.push(result[type]);
+                var $canvas = $('#' + divId).find('canvas');
 
-                    if(result.fq){
-                        labelToFq[prettifiedLabel] = result.fq;
-                    } else {
-                        labelToFq[prettifiedLabel] = facet + ":" + result.label;
-                    }
+                if (datastructure.datasets[0].data.length > 0) {
+                    var ctx = $canvas.get(0).getContext("2d");
+                    var horizBar = new Chart(ctx).HorizontalBar(datastructure, {responsive: true});
+
+                    $canvas.click(
+                        function (evt) {
+                            var activePoints = horizBar.getBarsAtEvent(evt);
+                            var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + query + "&fq=" + labelToFq[activePoints[0].label];
+                            window.location.href = url;
+                        }
+                    );
+                } else {
+                    $canvas.parent().append($("<label>No data to display</label>").addClass('chart-no-data-label'));
+
+                    $canvas.parent().find('.chart-canvas').detach();
+                    $canvas.parent().find('.chart-legend').detach();
                 }
             });
-
-            var $canvas = $('#' + divId).find('canvas');
-            var ctx = $canvas.get(0).getContext("2d");
-            var horizBar = new Chart(ctx).HorizontalBar(datastructure, {responsive: true});
-
-            $canvas.click (
-                function(evt){
-                    var activePoints = horizBar.getBarsAtEvent(evt);
-                    var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + query + "&fq=" + labelToFq[activePoints[0].label];
-                    window.location.href = url;
-                }
-            );
-        });
-    }
+        } else {
+            delete chartConfig.hideOnce
+        }
+    };
 
     /**
      * Constructor for the Bar chart.
@@ -208,57 +232,70 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         var divId = createCanvasAndLegend(facet, chartConfig.title, chartConfig);
 
-        wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, function(data, type){
+        if (chartConfig && !chartConfig.hideOnce) {
 
-            var labelToFq = {};
+            wsCallAndRender(query, facet, valueType, valueFacet, facetQueries, queryContext, chartConfig.filter, divId, function (data, type) {
 
-            //prepare Chart.js data structure
-            var datastructure = {
-                labels : [],
-                datasets : [{
-                    label: chartConfig.title,
-                    fillColor: "rgba(151,187,205,0.5)",
-                    strokeColor: "rgba(151,187,205,0.8)",
-                    highlightFill: "rgba(151,187,205,0.75)",
-                    highlightStroke: "rgba(151,187,205,1)",
-                    data: []
-                }]
-            };
+                var labelToFq = {};
 
-            //compile results from WS call
-            $.each( data, function(key, result) {
+                //prepare Chart.js data structure
+                var datastructure = {
+                    labels: [],
+                    datasets: [{
+                        label: chartConfig.title,
+                        fillColor: "rgba(151,187,205,0.5)",
+                        strokeColor: "rgba(151,187,205,0.8)",
+                        highlightFill: "rgba(151,187,205,0.75)",
+                        highlightStroke: "rgba(151,187,205,1)",
+                        data: []
+                    }]
+                };
 
-                if (result.label == null) result.label = "";
-                if(!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
-                    var prettifiedLabel = result.label.substring(0, 80);
-                    if(result.label.trim() == "")   {
-                        prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
+                //compile results from WS call
+                $.each(data, function (key, result) {
+
+                    if (result.label == null) result.label = "";
+                    if (!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
+                        var prettifiedLabel = result.label.substring(0, 80);
+                        if (result.label.trim() == "") {
+                            prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
+                        }
+
+                        datastructure.labels.push(prettifiedLabel);
+                        datastructure.datasets[0].data.push(result[type]);
+
+                        if (result.fq) {
+                            labelToFq[prettifiedLabel] = result.fq;
+                        } else {
+                            labelToFq[prettifiedLabel] = facet + ":" + result.label;
+                        }
                     }
+                });
 
-                    datastructure.labels.push(prettifiedLabel);
-                    datastructure.datasets[0].data.push(result[type]);
+                var $canvas = $('#' + divId).find('canvas');
 
-                    if(result.fq){
-                        labelToFq[prettifiedLabel] = result.fq;
-                    } else {
-                        labelToFq[prettifiedLabel] = facet + ":" + result.label;
-                    }
+                if (datastructure.datasets[0].data.length > 0) {
+                    var ctx = $canvas.get(0).getContext("2d");
+                    var bar = new Chart(ctx).Bar(datastructure, {responsive: true});
+
+                    $canvas.click(
+                        function (evt) {
+                            var activePoints = bar.getBarsAtEvent(evt);
+                            var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + query + "&fq=" + labelToFq[activePoints[0].label];
+                            window.location.href = url;
+                        }
+                    );
+                } else {
+                    $canvas.parent().append($("<label>No data to display</label>").addClass('chart-no-data-label'));
+
+                    $canvas.parent().find('.chart-canvas').detach();
+                    $canvas.parent().find('.chart-legend').detach();
                 }
             });
-
-            var $canvas = $('#' + divId).find('canvas');
-            var ctx = $canvas.get(0).getContext("2d");
-            var bar = new Chart(ctx).Bar(datastructure, { responsive: true });
-
-            $canvas.click (
-                function(evt){
-                    var activePoints = bar.getBarsAtEvent(evt);
-                    var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + query + "&fq=" + labelToFq[activePoints[0].label];
-                    window.location.href = url;
-                }
-            );
-        });
-    }
+        } else {
+            delete chartConfig.hideOnce;
+        }
+    };
 
     /**
      * Function that wraps the WS call to retrieve a facet
@@ -272,7 +309,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @param additionalFilter
      * @param dataCallback the callback function to use if data available
      */
-    var wsCallAndRender = function(query, facet, valueType, valueFacet, facetQueries, queryContext, additionalFilter, dataCallback){
+    var wsCallAndRender = function(query, facet, valueType, valueFacet, facetQueries, queryContext, additionalFilter, divId, dataCallback){
 
         if(query == "" || query == undefined) {
             query = "*:*";
@@ -294,6 +331,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             queryUrl = queryUrl + '&' + additionalFilter;
         }
 
+        $('#' + divId).find('.chart-loading').show()
+
         $.ajax({
             url: queryUrl,
             type: 'GET',
@@ -304,6 +343,9 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 if(data && data.length > 0){
                     dataCallback(data, valueType);
                 }
+            },
+            complete: function() {
+                $('#' + divId).find('.chart-loading').hide()
             }
         });
     }
@@ -324,19 +366,36 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      */
     var createCanvasAndLegend = function(facet, title, chartConfig){
         var divId = facet + '-chart-' + chartCounter;
-        chartConfig.divId = divId
+        var $topDiv;
+        if (chartConfig && chartConfig.divId && $('#' + chartConfig.divId).size() > 0) {
+            //top div already exists, replace contents
+            divId = chartConfig.divId;
+            $topDiv = $('#' + divId);
+            $topDiv.empty();
+        } else {
+            chartConfig.divId = divId;
+            chartCounter++;
+            $topDiv = $('<div/>').addClass('chart').attr('id', divId);
+        }
 
-        chartCounter++;
-        var $topDiv = $('<div/>').addClass('chart').attr('id', divId);
         var $title = $('<h3/>').addClass('chart-title').html(title);
         var $canvas = $('<canvas/>').addClass('chart-canvas');
         var $legend = $('<div/>').addClass('chart-legend').addClass('ala-doughnut-legend');
 
+        var $progress = $('<label>loading...</label>').addClass('chart-loading');
+
         if (chartOptions.chartControls) {
-            var $delete = $('<button>delete</button>').addClass('chart-delete').addClass('btn').addClass('btn-xs').addClass('btn-mini').addClass('btn-danger').click(deleteChart);
-            $topDiv.append($title).append($delete).append($canvas).append($legend);
+            var $delete = $('<button>delete</button>').addClass('btn').addClass('btn-xs').addClass('btn-mini').addClass('btn-danger').click(deleteChart);
+            var $edit = $('<button>edit</button>').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(editChart);
+            var $hide = $('<button>hide</button>').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(hideChart);
+            var $show = $('<button>show</button>').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(showChart);
+            $topDiv.append($title).append($delete).append($edit).append($hide).append($show);
         } else {
-            $topDiv.append($title).append($canvas).append($legend);
+            $topDiv.append($title)
+        }
+        
+        if (chartConfig && !chartConfig.hideOnce) {
+            $topDiv.append($canvas).append($legend).append($progress);
         }
 
         $('#' + chartsDivId).append($topDiv);
@@ -344,8 +403,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
     }
 
     function deleteChart(event) {
-        var divId = $(event.target).parent('.chart').attr('id');
-        for (key in chartOptions.charts) {
+        var divId = $(event.target).closest('.chart').attr('id');
+        for (var key in chartOptions.charts) {
             if (chartOptions.charts[key].divId == divId) {
                 delete chartOptions.charts[key];
             }
@@ -356,6 +415,52 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         }
 
         $(event.target).parent().detach();
+    }
+
+    function hideChart(event) {
+        var chart = $(event.target).closest('.chart');
+        chart.children('.chart-canvas').hide()
+        chart.children('.chart-legend').hide()
+        chart.children('.chart-no-data-label').hide()
+
+    }
+
+    function showChart(event) {
+        var chart = $(event.target).closest('.chart');
+
+        if (chart.children('.chart-canvas').size() == 0 && chart.children('.chart-canvas').size() == 0) {
+            //create chart
+            var divId = chart.attr('id');
+            for (var key in chartOptions.charts) {
+                if (chartOptions.charts[key].divId == divId) {
+                    createChart(chartOptions.charts[key].facet, chartOptions.charts[key]);
+                }
+            }
+        } else {
+            chart.children('.chart-canvas').show()
+            chart.children('.chart-legend').show()
+            chart.children('.chart-no-data-label').show()
+        }
+    }
+
+    function editChart(event) {
+        var chart = $(event.target).closest('.chart');
+
+        //toggle
+        if (chart.children('.chart-add').size() == 0) {
+            hideChart(event);
+
+            var divId = $(event.target).closest('.chart').attr('id');
+            for (var key in chartOptions.charts) {
+                if (chartOptions.charts[key].divId == divId) {
+                    createControl($(event.target).closest('.chart'), true, chartOptions.charts[key]);
+                }
+
+            }
+        } else {
+            showChart(event);
+            chart.children('.chart-add').detach();
+        }
     }
 
     var createChart = function(facet, chartConfig) {
@@ -373,12 +478,14 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
     }
 
     //create add chart control
-    var createControl = function() {
+    var createControl = function(parent, editchart, defaults) {
         var control = $('<div/>').addClass('chart-add');
 
+        var defaultTitle = 'My chart';
+        if (defaults && defaults.title) defaultTitle = defaults.title;
         var title = $('<div/>').addClass('chart-add-group').
             append($('<label>Title</label>').addClass('chart-add-label')).
-            append($('<input/>').addClass('chart-add-title').val('My chart'));
+            append($('<input/>').addClass('chart-add-title').val(defaultTitle));
 
         var valueTypeSelect = $('<select/>').addClass('chart-add-value-type');
         var valueType =$('<div/>').addClass('chart-add-group').
@@ -387,18 +494,18 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         $([ 'count', 'sum', 'max', 'min', 'mean', 'missing', 'stddev' ]).each(function (key, value) {
             valueTypeSelect.append($("<option/>").attr('value', value).text(value));
         });
+        if (defaults && defaults.valueType) valueTypeSelect.val(defaults.valueType);
 
         var valueFacetSelect = $('<select/>').addClass('chart-add-value-facet');
         var valueFacet = $('<div/>').addClass('chart-add-group').
             append($('<label>Value facet (when not "count")</label>').addClass('chart-add-label')).
             append(valueFacetSelect);
+        if (defaults && defaults.facet) valueFacetSelect.val(defaults.facet);
 
         var facetSelect = $('<select/>').addClass('chart-add-facet');
         var facet = $('<div/>').addClass('chart-add-group').
             append($('<label>Facet</label>').addClass('chart-add-label')).
             append(facetSelect);
-
-        var button = $('<button>Add new chart</button>').addClass('chart-add-button').click(addChart);
 
         var chartTypeSelect = $('<select/>').addClass('chart-add-chart-type');
         var chartType =$('<div/>').addClass('chart-add-group').
@@ -407,14 +514,29 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         $([ 'bar', 'horizontal-bar', 'doughnut' ]).each(function (key, value) {
             chartTypeSelect.append($("<option/>").attr('value', value).text(value));
         });
+        if (defaults && defaults.chartType) chartTypeSelect.val(defaults.chartType);
 
+        var defaultEmptyValueMsg = 'Unknown'
+        if (defaults && defaults.emptyValueMsg) defaultEmptyValueMsg = defaults.emptyValueMsg;
         var emptyValueMsg = $('<div/>').addClass('chart-add-group').
             append($('<label>Empty value message</label>').addClass('chart-add-label')).
-            append($('<input/>').addClass('chart-add-empty-value-msg').val('Undefined'));
+            append($('<input/>').addClass('chart-add-empty-value-msg').val(defaultEmptyValueMsg));
 
+        var defaultHideEmptyValues = true
+        if (defaults && defaults.hideEmptyValues) defaultHideEmptyValues = defaults.hideEmptyValues;
         var hideEmptyValues = $('<div/>').addClass('chart-add-group').
             append($('<label>Hide empty values</label>').addClass('chart-add-label')).
-            append($('<input/>').addClass('chart-hide-empty-values').attr('type', 'checkbox').prop('checked', true));
+            append($('<input/>').addClass('chart-hide-empty-values').attr('type', 'checkbox').prop('checked', defaultHideEmptyValues));
+
+        var button;
+        if (editchart) {
+            button = $('<div/>').
+                append($('<button>Apply changes</button>').addClass('chart-add-button').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(applyChartChanges)).
+                //toggle edit controls
+                append($('<button>Cancel</button>').addClass('chart-add-cancel').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(editChart));
+        } else {
+            button = $('<button>Add new chart</button>').addClass('chart-add-button').addClass('btn').click(addChart);
+        }
 
         control.append(title);
         control.append(chartType);
@@ -426,7 +548,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         control.append(emptyValueMsg);
         control.append(button);
 
-        $('#' + chartsDivId).append(control);
+        parent.append(control);
 
         $.ajax({
             url: chartOptions.biocacheServiceUrl + '/index/fields',
@@ -446,6 +568,9 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                             }
                         }
                     });
+
+                    if (defaults && defaults.facet) facetSelect.val(defaults.facet);
+                    if (defaults && defaults.valueFacet) valueFacetSelect.val(defaults.valueFacet);
                 }
             }
         });
@@ -467,17 +592,53 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         createChart(options.facet, options);
 
         //save with a unique name
-        var i = 0
+        var i = 0;
         while (chartOptions.charts[i + '*' + options.facet] !== undefined) i++;
         chartOptions.charts[i + '*' + options.facet] = options;
 
         if (chartOptions.chartControlsCallback) {
             chartOptions.chartControlsCallback(chartOptions);
         }
+    };
+
+    var applyChartChanges = function(event) {
+        var divId = $(event.target).closest('.chart').attr('id');
+        var $topDiv = $('#' + divId);
+        for (var key in chartOptions.charts) {
+            if (chartOptions.charts[key].divId == divId) {
+                var options = {
+                    title: $topDiv.find('.chart-add-title').val(),
+                    facet: $topDiv.find('.chart-add-facet').val(),
+                    valueFacet: $topDiv.find('.chart-add-value-facet').val(),
+                    valueType: $topDiv.find('.chart-add-value-type').val(),
+                    chartType: $topDiv.find('.chart-add-chart-type').val(),
+                    emptyValueMsg: $topDiv.find('.chart-add-empty-value-msg').val(),
+                    hideEmptyValues: $topDiv.find('.chart-hide-empty-values').val() == 'on',
+                    divId: divId
+                };
+
+                chartOptions.charts[key] = options;
+
+                if (chartOptions.chartControlsCallback) {
+                    chartOptions.chartControlsCallback(chartOptions);
+                }
+
+                //create new chart
+                createChart(options.facet, options);
+            }
+        }
+    };
+
+    var toggleAddControls = function(event) {
+        $(event.target).parent().children('.chart-add:first').toggle();
     }
 
     if (chartOptions.chartControls) {
-        createControl();
+        $('#' + chartsDivId).append($('<button>Toggle Chart Controls</button>').addClass('chart-controls-toggle').addClass('btn').click(toggleAddControls));
+        createControl( $('#' + chartsDivId) );
+
+        //hide controls
+        $('#' + chartsDivId).children('.chart-add:first').toggle();
     }
 
     //create the charts
@@ -489,4 +650,4 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             createChart(chartConfig.facet, chartConfig)
         }
     });
-}
+};

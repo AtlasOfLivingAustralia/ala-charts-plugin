@@ -8,3 +8,4 @@
 .chart-add-facet { width: 400px; }
 .chart-add-value-facet { width: 400px; }
 .chart-delete { float: left; margin-top: -20px; }
+.chart-controls-toggle { display: block; }
