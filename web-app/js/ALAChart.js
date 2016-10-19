@@ -463,14 +463,19 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @returns {string}
      */
     var createCanvasAndLegend = function(facet, title, chartConfig){
+        console.log("createCanvasAndLegend",title,chartConfig.divId);
         var divId = facet + '-chart-' + chartCounter;
         var $topDiv;
+        var checked = "";
         if (chartConfig && chartConfig.divId && $('#' + chartConfig.divId).size() > 0) {
+            console.log("div existst");
             //top div already exists, replace contents
             divId = chartConfig.divId;
             $topDiv = $('#' + divId);
             $topDiv.empty();
+            checked = "checked";
         } else {
+            console.log("div NOT exists");
             chartConfig.divId = divId;
             chartCounter++;
             $topDiv = $('<div/>').addClass('chart').attr('id', divId);
@@ -485,9 +490,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         if (chartOptions.chartControls) {
             var $delete = $('<button>delete</button>').addClass('btn').addClass('btn-xs').addClass('btn-mini').addClass('btn-danger').click(deleteChart);
             var $edit = $('<button>edit</button>').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(editChart);
-            var $hide = $('<button>hide</button>').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(hideChart);
-            var $show = $('<button>show</button>').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(showChart);
-            $topDiv.append($title).append($delete).append($edit).append($hide).append($show);
+            var $showHide = $('<input type="checkbox" name="show-hide-chart" class="bootToggle" ' + checked + '>').change(toggleChart);
+            $topDiv.append($title).append($delete).append($edit).append($showHide);
         } else {
             $topDiv.append($title)
         }
@@ -510,23 +514,40 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             $topDiv.append($canvas).append($legend).append($progress);
         }
 
-        $('#' + chartsDivId).append($topDiv);
+        $('#' + chartsDivId).append($topDiv).find('.bootToggle').bootstrapToggle({
+            on: 'hide',
+            off: 'show',
+            size: 'mini',
+            onstyle: 'default'
+        });
+        console.log("$topDiv html", $topDiv.prop("outerHTML"));
         return divId;
     }
 
     function deleteChart(event) {
-        var divId = $(event.target).closest('.chart').attr('id');
-        for (var key in chartOptions.charts) {
-            if (chartOptions.charts[key].divId == divId) {
-                delete chartOptions.charts[key];
+        if (confirm("Are you sure you want to delete this chart?")) {
+            var divId = $(event.target).closest('.chart').attr('id');
+            for (var key in chartOptions.charts) {
+                if (chartOptions.charts[key].divId == divId) {
+                    delete chartOptions.charts[key];
+                }
             }
-        }
 
-        if (chartOptions.chartControlsCallback) {
-            chartOptions.chartControlsCallback(chartOptions);
-        }
+            if (chartOptions.chartControlsCallback) {
+                chartOptions.chartControlsCallback(chartOptions);
+            }
 
-        $(event.target).parent().detach();
+            $(event.target).parent().detach();
+        }
+    }
+
+    function toggleChart(event) {
+        console.log("toggleChart",$(event.target),$(event.target).is(":checked"));
+        if ($(event.target).is(":checked")) {
+            showChart(event);
+        } else {
+            hideChart(event);
+        }
     }
 
     function hideChart(event) {
@@ -534,7 +555,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         chart.children('.chart-canvas').hide()
         chart.children('.chart-legend').hide()
         chart.children('.chart-no-data-label').hide()
-
     }
 
     function showChart(event) {
@@ -542,6 +562,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         if (chart.children('.chart-canvas').size() == 0 && chart.children('.chart-canvas').size() == 0) {
             //create chart
+            console.log("create chart");
             var divId = chart.attr('id');
             for (var key in chartOptions.charts) {
                 if (chartOptions.charts[key].divId == divId) {
@@ -549,6 +570,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 }
             }
         } else {
+            console.log("just show chart");
             chart.children('.chart-canvas').show()
             chart.children('.chart-legend').show()
             chart.children('.chart-no-data-label').show()
@@ -869,5 +891,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             createChart(chartConfig.facet, chartConfig)
         }
     });
+
+    //$(".bootSwitch").bootstrapSwitch({size:'small'});
 
 };
