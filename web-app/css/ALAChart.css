@@ -9,3 +9,85 @@
 .chart-add-value-facet { width: 400px; }
 .chart-delete { float: left; margin-top: -20px; }
 .chart-controls-toggle { display: block; }
+
+
+
+#timeControls {
+    margin-bottom: 2.5em;
+}
+
+#timeSlider .ui-slider-label {
+    font-size: .8em;
+}
+
+#timeSlider .ui-slider-handle {
+    cursor: pointer;
+}
+
+#timeSlider .ui-slider-label {
+    color: #999 !important;
+}
+
+#timeRange {
+    text-align: center;
+    margin-top: 1.6em;
+}
+
+#timeButtons {
+    height: 2.5em;
+}
+
+.timeControl {
+    width: 2em;
+    height: 2em;
+    padding-right: .8em;
+    padding-top: .1em;
+}
+
+#playButton {
+    background: url("../images/play.png") no-repeat ;
+    background-size: 26px 26px;
+    display: inline-block;
+}
+
+#playButton:hover, #playButton.selected  {
+    background: url("../images/play-on.png") no-repeat ;
+    background-size: 26px 26px;
+    display: inline-block;
+}
+
+#pauseButton {
+    background: url("../images/pause.png") no-repeat ;
+    background-size: 26px 26px;
+    display: inline-block;
+}
+
+#pauseButton:hover, #pauseButton.selected {
+    background: url("../images/pause-on.png") no-repeat ;
+    background-size: 26px 26px;
+    display: inline-block;
+}
+
+#stopButton {
+    background: url("../images/stop.png") no-repeat ;
+    background-size: 26px 26px;
+    display: inline-block;
+}
+
+#stopButton:hover, #stopButton.selected {
+    background: url("../images/stop-on.png") no-repeat ;
+    background-size: 26px 26px;
+    display: inline-block;
+}
+
+#resetButton {
+    background: url("../images/reset.png") no-repeat ;
+    background-size: 26px 26px;
+    display: inline-block;
+}
+
+#resetButton:hover, #resetButton.selected {
+    background: url("../images/reset-on.png") no-repeat ;
+    background-size: 26px 26px;
+    display: inline-block;
+}
