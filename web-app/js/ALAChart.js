@@ -240,13 +240,16 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             wsCallAndRender(chartConfig, chartOptions.query, facet, chartOptions.facetQueries, chartOptions.queryContext, chartConfig.filter, divId, function (data) {
 
                 if (!chartConfig.slider) {
-                    chartConfig.slider = new RegionTimeControls({
-                        parent: $('#' + divId), 
-                        callback: function (value) {
-                            console.log(value)
-                            chartConfig.sliderFq = '&fq=' + chartConfig.sliderFacet + ':[' + value[0] + '%20TO%20' + value[1] + ']';
-                            createChart(facet, chartConfig, true)
-                        }
+                    getMinMax(chartConfig, chartConfig.sliderFacet, function(minMax) {
+                        chartConfig.slider = new RegionTimeControls({
+                            parent: $('#' + divId),
+                            range: minMax,
+                            callback: function (value) {
+                                console.log(value)
+                                chartConfig.sliderFq = '&fq=' + chartConfig.sliderFacet + ':[' + value[0] + '%20TO%20' + value[1] + ']';
+                                createChart(facet, chartConfig, true)
+                            }
+                        });
                     });
                 }
 
@@ -346,7 +349,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             }
         });
 
-        if (chartType == 'pie' || chartType == 'doughnut') {
+        if (chartType == 'pie' || chartType == 'doughnut' || chartConfig.seriesEnabled) {
             $('#' + divId).find('.chart-legend').get(0).innerHTML = chart.generateLegend();
         }
 
@@ -389,9 +392,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         if (!chartConfig.sliderFq) chartConfig.sliderFq = ''
 
+        var x = (facet) ? "&x=" + facet : "";
+
         //default search service
         var queryUrl = chartOptions.biocacheServiceUrl + "/chart.json?q=" + query +
-            "&x=" + facet + xranges +"&qc=" + queryContext + valueParam + chartConfig.sliderFq + seriesRanges + series;
+            x + xranges +"&qc=" + queryContext + valueParam + chartConfig.sliderFq + seriesRanges + series;
 
         if(additionalFilter) {
             queryUrl = queryUrl + '&' + additionalFilter;
@@ -845,14 +850,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
     var getMinMax = function(chartConfig, col, func) {
 
-        wsCallAndRender(chartConfig, chartOptions.query, chartConfig.facet, chartOptions.facetQueries, chartOptions.queryContext, chartConfig.filter, function (data) {
-            var oldType = chartConfig.valueType;
-            var oldCol = chartConfig.valueFacet;
-            chartConfig.valueType = 'max'
-            chartConfig.valueFacet = col
-            func(data)
-            chartConfig.valueType = oldType;
-            chartConfig.valueFacet = oldCol;
+        var config = jQuery.extend(true, {}, chartConfig);
+        config.valueType = 'max';
+        config.valueFacet = col;
+        config.facet = null;
+
+        wsCallAndRender(config, chartOptions.query, config.facet, chartOptions.facetQueries, chartOptions.queryContext, config.filter, config.divId, function (data) {
+            func([data[0].data[0]['min'], data[0].data[0]['max']]);
         });
     }
 
@@ -868,7 +872,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             console.log('unable to get index/fields')
         },
         success: function(data) {
-            _facets = data;
+            _facets = data.sort(function(o1, o2) {
+                var name1 = ((o1.description)?o1.description: o1.name).toLowerCase();
+                var name2 = ((o2.description)?o2.description: o2.name).toLowerCase();
+                return (name1 < name2) ? -1 : (name1 > name2) ? 1 : 0;
+            });
 
             console.log('init chart controls')
 

@@ -13,17 +13,27 @@ var RegionTimeControls = function(config) {
         STOPPED: 2
     };
     var state = CONTROL_STATES.STOPPED;
-    var from = 1800
-    var to = 2017
-    var maxValue = 2017
-    var minValue = 1800
+    var from;
+    var to;
+    var maxValue;
+    var minValue;
     var refreshInterval;
     var playTimeRange;
 
     var callback;
+    var _config;
 
     var init = function(config) {
         callback = config.callback;
+        _config = config;
+
+        minValue = from = config.range[0];
+        maxValue = to = config.range[1];
+
+        updateTimeRange(config.range)
+
+        //default step size is 1/10 of range
+        config.parent.find('#stepSize').val((maxValue - minValue) / 10.0);
 
         timeSlider = config.parent.find('#timeSlider')
             .slider({
@@ -33,11 +43,9 @@ var RegionTimeControls = function(config) {
                 range: true,
                 value: [from, to]
             }).on('slideStop', function(event, ui) {
-                console.log('slideStop')
                 callback(timeSlider.getValue())
                 updateTimeRange(timeSlider.getValue())
             }).on('slide', function(event, ui) {
-                console.log('slide')
                 updateTimeRange(timeSlider.getValue())
             }).data('slider');
 
@@ -47,31 +55,36 @@ var RegionTimeControls = function(config) {
 
     var initializeTimeControlsEvents = function() {
         // Initialize play button
-        $('#playButton').on('click', function(){
+        _config.parent.find('#playButton').on('click', function(){
             play();
         });
 
         // Initialize stop button
-        $('#stopButton').on('click', function(){
+        _config.parent.find('#stopButton').on('click', function(){
             stop();
         });
 
         // Initialize pause button
-        $('#pauseButton').on('click', function(){
+        _config.parent.find('#pauseButton').on('click', function(){
             pause();
         });
 
         // Initialize reset button
-        $('#resetButton').on('click', function(){
+        _config.parent.find('#resetButton').on('click', function(){
             reset();
         });
 
     };
 
+    var stepSize = function() {
+        return parseInt(config.parent.find('#stepSize').val());
+    }
+
     var increaseTimeRangeByADecade = function() {
-        var incrementTo = (maxValue - playTimeRange[1]) < 10 ? maxValue - playTimeRange[1] : 10;
+        var step = stepSize();
+        var incrementTo = (maxValue - playTimeRange[1]) < step ? maxValue - playTimeRange[1] : step;
         if (incrementTo != 0) {
-            timeSlider.setValue([playTimeRange[0] + 10, playTimeRange[1] + incrementTo], false, true);
+            timeSlider.setValue([playTimeRange[0] + step, playTimeRange[1] + incrementTo], false, true);
             playTimeRange = timeSlider.getValue();
             callback(timeSlider.getValue())
         } else {
@@ -86,7 +99,7 @@ var RegionTimeControls = function(config) {
                 // Start playing from the beginning
                 // Update state before updating slider values
                 state = CONTROL_STATES.PLAYING;
-                timeSlider.setValue([minValue, minValue + 10], false, true);
+                timeSlider.setValue([minValue, minValue + stepSize()], false, true);
                 break;
             case CONTROL_STATES.PAUSED:
                 // Resume playing
@@ -97,8 +110,8 @@ var RegionTimeControls = function(config) {
         }
 
         // For SVG elements the addClass and removeClass jQuery method do not work
-        $('#pauseButton').removeClass('selected').trigger('selected');
-        $('#playButton').addClass('selected').trigger('selected');
+        _config.parent.find('#pauseButton').removeClass('selected').trigger('selected');
+        _config.parent.find('#playButton').addClass('selected').trigger('selected');
         playTimeRange = timeSlider.getValue();
         refreshInterval = setInterval(function () {
             increaseTimeRangeByADecade();
@@ -107,15 +120,15 @@ var RegionTimeControls = function(config) {
 
     var stop = function() {
         clearInterval(refreshInterval);
-        $('#pauseButton').removeClass('selected').trigger('selected');
-        $('#playButton').removeClass('selected').trigger('selected');
+        _config.parent.find('#pauseButton').removeClass('selected').trigger('selected');
+        _config.parent.find('#playButton').removeClass('selected').trigger('selected');
         state = CONTROL_STATES.STOPPED;
     };
 
     var pause = function() {
         if (state === CONTROL_STATES.PLAYING) {
-            $('#pauseButton').addClass('selected').trigger('selected');
-            $('#playButton').removeClass('selected').trigger('selected');
+            _config.parent.find('#pauseButton').addClass('selected').trigger('selected');
+            _config.parent.find('#playButton').removeClass('selected').trigger('selected');
             clearInterval(refreshInterval);
             state = CONTROL_STATES.PAUSED;
         }
@@ -129,8 +142,8 @@ var RegionTimeControls = function(config) {
     };
 
     var updateTimeRange = function(values) {
-        $('#timeFrom').text(values[0]);
-        $('#timeTo').text(values[1]);
+        _config.parent.find('#timeFrom').text(values[0]);
+        _config.parent.find('#timeTo').text(values[1]);
     };
 
     var _public = {

@@ -91,3 +91,9 @@
     background-size: 26px 26px;
     display: inline-block;
 }
+
+#stepSize {
+    width: 50px;
+    font-size: 10px;
+    margin-top: -15px;
+}
