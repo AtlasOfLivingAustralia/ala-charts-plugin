@@ -1043,11 +1043,12 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             console.log('init chart controls');
 
             if (chartOptions.chartControls) {
-                $('#' + chartsDivId).prepend($('<button>Toggle Chart Controls</button>').addClass('chart-controls-toggle').addClass('btn').click(toggleAddControls));
-                createControl( $('#' + chartsDivId), false, {}, {});
+                var ctrl = $('<div/>').append($('<button>Toggle Chart Controls</button>').addClass('chart-controls-toggle').addClass('btn').click(toggleAddControls))
+                $('#' + chartsDivId).prepend(ctrl);
+                createControl( ctrl, false, {}, {});
 
                 //hide controls
-                $('#' + chartsDivId).children('.chart-add:first').toggle();
+                ctrl.children('.chart-add:first').toggle();
             }
         }
     });
