@@ -592,7 +592,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             var divId = $(event.target).closest('.chart').attr('id');
             for (var key in chartOptions.charts) {
                 if (chartOptions.charts[key].divId == divId) {
-                    createControl($(event.target).closest('.chart'), true, chartOptions.charts[key]);
+                    createControl($(event.target).closest('.chart'), true, chartOptions.charts[key], chartConfig);
                 }
 
             }
@@ -627,7 +627,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
     }
 
     //create add chart control
-    var createControl = function(parent, editchart, defaults) {
+    var createControl = function(parent, editchart, defaults, chartConfig) {
         var control = $('<div/>').addClass('chart-add');
 
         var title = createTextInput('Title', 'title',
@@ -670,7 +670,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 facet.find('select').append($("<option/>").attr('value', value.name).text(displayValue));
                 seriesFacet.find('select').append($("<option/>").attr('value', value.name).text(displayValue));
 
-                if (value.dataType == 'int' || value.dataType == 'double') {
+                if (value.dataType == 'int' || value.dataType == 'double' || value.dataType == 'long' ||
+                    value.dataType == 'tint' || value.dataType == 'tdouble' || value.dataType == 'tlong') {
                     valueFacet.find('select').append($("<option/>").attr('value', value.name).text(displayValue));
                 }
 
@@ -715,10 +716,10 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         parent.append(control);
 
-        applyControlBehaviour(control);
+        applyControlBehaviour(control, chartConfig);
     };
 
-    var applyControlBehaviour = function (control) {
+    var applyControlBehaviour = function (control, chartConfig) {
 
         control.find('.chart-add-chart-type').change(function (evt) {
             var show = control.find('.chart-add-chart-type').val() != 'pie' && control.find('.chart-add-chart-type').val() != 'doughnut';
@@ -734,7 +735,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         control.find('.chart-add-chart-type').change();
 
         control.find('.chart-add-series-enabled').change(function (evt) {
-            controlVisible(control, ['series-facet', 'series-ranges'], control.find('.chart-add-series-enabled').prop('checked'));
+            var show = control.find('.chart-add-series-enabled').prop('checked');
+            controlVisible(control, ['series-facet', 'series-ranges'], show);
+            if (show) {
+                control.find('.chart-add-series-facet').change();
+            }
         });
         control.find('.chart-add-series-enabled').change();
 
@@ -754,12 +759,28 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         control.find('.chart-add-value-type').change();
 
         control.find('.chart-add-facet').change(function (evt) {
-            controlVisible(control, ['value-ranges'], $.inArray(facetLookup(control.find('.chart-add-facet').val()).dataType, ['int', 'tint', 'double', 'tdouble', 'date', 'tdate']) >= 0);
+            var show =$.inArray(facetLookup(control.find('.chart-add-facet').val()).dataType, ['long', 'tlong', 'int', 'tint', 'double', 'tdouble', 'date', 'tdate']) >= 0;
+            controlVisible(control, ['value-ranges'], show);
+            if (show) {
+                getMinMax(chartConfig, control.find('.chart-add-facet').val(), function (minMax) {
+                    console.log(minMax);
+                    control.find('.chart-add-value-ranges').attr("placeholder", minMax[0] + ' to ' + minMax[1]);
+                    control.find('.chart-add-value-ranges').attr("title", minMax[0] + ' to ' + minMax[1]);
+                })
+            }
         });
         control.find('.chart-add-facet').change();
 
         control.find('.chart-add-series-facet').change(function (evt) {
-            controlVisible(control, ['series-ranges'], $.inArray(facetLookup(control.find('.chart-add-series-facet').val()).dataType, ['int', 'tint', 'double', 'tdouble', 'date', 'tdate']) >= 0);
+            var show = $.inArray(facetLookup(control.find('.chart-add-series-facet').val()).dataType, ['long', 'tlong', 'int', 'tint', 'double', 'tdouble', 'date', 'tdate']) >= 0;
+            controlVisible(control, ['series-ranges'], show);
+            if (show) {
+                getMinMax(chartConfig, control.find('.chart-add-series-facet').val(), function (minMax) {
+                    console.log(minMax);
+                    control.find('.chart-add-series-ranges').attr("placeholder", minMax[0] + ' to ' + minMax[1]);
+                    control.find('.chart-add-series-ranges').attr("title", minMax[0] + ' to ' + minMax[1]);
+                })
+            }
         });
         control.find('.chart-add-series-facet').change();
     };
@@ -882,7 +903,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
             if (chartOptions.chartControls) {
                 $('#' + chartsDivId).append($('<button>Toggle Chart Controls</button>').addClass('chart-controls-toggle').addClass('btn').click(toggleAddControls));
-                createControl( $('#' + chartsDivId) );
+                createControl( $('#' + chartsDivId), false, {}, {});
 
                 //hide controls
                 $('#' + chartsDivId).children('.chart-add:first').toggle();
