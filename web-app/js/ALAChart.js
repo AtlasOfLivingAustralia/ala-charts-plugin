@@ -639,13 +639,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         }
     }
 
-    var createTextInput = function(label, clas, value) {
+    var createTextInput = function(label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + label + '</label>').addClass('chart-add-label')).
+            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append($('<input/>').addClass('chart-add-' + clas).val(value));
     };
 
-    var createSelectInput = function(label, clas, values, defaultValue) {
+    var createSelectInput = function(label, clas, values, defaultValue, hint) {
         var select = $('<select/>').addClass('chart-add-' + clas);
         $(values).each(function (key, value) {
             select.append($("<option/>").attr('value', value).text(value));
@@ -653,15 +653,19 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         select.val(defaultValue);
 
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + label + '</label>').addClass('chart-add-label')).
+            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append(select);
     };
 
-    var createCheckboxInput = function (label, clas, value) {
+    var createCheckboxInput = function (label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + label + '</label>').addClass('chart-add-label')).
+            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append($('<input/>').addClass('chart-add-' + clas).attr('type', 'checkbox').prop('checked', value));
-    }
+    };
+
+    var createHintIcon = function(hint) {
+        return $('<i/>').addClass('fa fa-question-circle hint').attr('title', hint);
+    };
 
     /**
      * Create controls for creating/editing a chart
@@ -675,42 +679,42 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         var control = $('<div/>').addClass('chart-add');
 
         var title = createTextInput('Title', 'title',
-            (defaults && defaults.title) ? defaults.title : 'My chart');
+            (defaults && defaults.title) ? defaults.title : 'My chart', 'Text will appear above the chart');
 
         var valueType = createSelectInput('Value', 'value-type', [ 'count', 'sum', 'max', 'min', 'mean', 'missing', 'stddev' ],
-            (defaults && defaults.valueType) ? defaults.valueType : 'count');
+            (defaults && defaults.valueType) ? defaults.valueType : 'count', 'Secondary axis "value", default is record count');
 
         var seriesEnabled = createCheckboxInput('Series enabled', 'series-enabled',
-            (defaults && defaults.seriesEnabled) ? defaults.seriesEnabled : false);
+            (defaults && defaults.seriesEnabled) ? defaults.seriesEnabled : false, 'Define what series is here');
 
         var sliderEnabled = createCheckboxInput('Slider enabled', 'slider-enabled',
-            (defaults && defaults.sliderEnabled) ? defaults.sliderEnabled : false);
+            (defaults && defaults.sliderEnabled) ? defaults.sliderEnabled : false, 'Add a slider to change the 3rd axis (usually date)');
 
         var seriesRanges = createTextInput('Series ranges', 'series-ranges',
-            (defaults && defaults.seriesRanges) ? defaults.seriesRanges : '');
+            (defaults && defaults.seriesRanges) ? defaults.seriesRanges : '', 'Enter a value for the range "size"');
 
         var valueRanges = createTextInput('Facet ranges', 'value-ranges',
-            (defaults && defaults.valueRanges) ? defaults.valueRanges : '');
+            (defaults && defaults.valueRanges) ? defaults.valueRanges : '', 'Enter a value for the range "size"');
 
         var chartType = createSelectInput('Chart type', 'chart-type', [ 'bar', 'horizontalBar', 'doughnut', 'pie', 'line' ],
-            (defaults && defaults.chartType) ? defaults.chartType : 'bar');
+            (defaults && defaults.chartType) ? defaults.chartType : 'bar', 'chart type is self explanatory');
 
         var emptyValueMsg = createTextInput('Empty value message', 'empty-value-msg',
-            (defaults && defaults.emptyValueMsg) ? defaults.emptyValueMsg : 'Unknown');
+            (defaults && defaults.emptyValueMsg) ? defaults.emptyValueMsg : 'Unknown', 'This text will appear when no value is present in the data');
 
         var hideEmptyValues = createCheckboxInput('Hide empty values', 'hide-empty-values',
-            (defaults && defaults.hideEmptyValues) ? defaults.hideEmptyValues : true);
+            (defaults && defaults.hideEmptyValues) ? defaults.hideEmptyValues : true, 'empty value will be removed from chart');
 
         var largeChart = createCheckboxInput('Large chart', 'large',
-            (defaults && defaults.large) ? defaults.large : false);
+            (defaults && defaults.large) ? defaults.large : false, 'Chart will take up the full width of the surrounding block');
 
         var logarithmic = createCheckboxInput('Logarithmic', 'logarithmic',
-            (defaults && defaults.logarithmic) ? defaults.logarithmic : false);
+            (defaults && defaults.logarithmic) ? defaults.logarithmic : false, 'Value axis will show logarithmic scale - use for large range of values in data');
 
-        var facet = createSelectInput('Facet', 'facet', [] , '');
-        var valueFacet = createSelectInput('Value facet', 'value-facet', [] , '');
-        var seriesFacet = createSelectInput('Series facet', 'series-facet', [] , '');
-        var sliderFacet = createSelectInput('Slider facet', 'slider-facet', [] , '');
+        var facet = createSelectInput('Facet', 'facet', [] , '', 'Choose a facet field for the first axis of the chart - see the filter column for facets that have values in your data');
+        var valueFacet = createSelectInput('Value facet', 'value-facet', [] , '', 'Choose a facet field for the secondary axis of the chart - values are computed using hte "Value" type chosen');
+        var seriesFacet = createSelectInput('Series facet', 'series-facet', [] , '', 'Choose a facet field for the "series" axis of the chart');
+        var sliderFacet = createSelectInput('Slider facet', 'slider-facet', [] , '', 'Choose a facet field for the "slider" axis of the chart');
         $(_facets).each(function (key, value) {
             if (value.indexed) {
                 var displayValue = (value.description) ? value.description : value.name;
@@ -1071,5 +1075,10 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         } else {
             createChart(chartConfig.facet, chartConfig)
         }
+    });
+
+    // activate BS tooltip (will work for dynamically generated content)
+    $('body').tooltip({
+        selector: '.hint'
     });
 };
