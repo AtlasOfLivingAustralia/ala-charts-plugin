@@ -82,7 +82,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             segmentColor = [];
             $.each(data, function (key, result) {
                 if (result.label == null) result.label = "";
-                if (!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
+                if (!(chartConfig.hideEmptyValues && result.label == "")/* && result["count"] > 0*/) {
                     segmentColor.push(ALA.ChartConstants.colors[(key + 1) % (ALA.ChartConstants.colors.length - 1)]);
                 }
             })
@@ -139,7 +139,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             $.each(resultSeries.data, function (key, result) {
 
                 if (result.label == null) result.label = "";
-                if (!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
+                if (!(chartConfig.hideEmptyValues && result.label == "")/* && result["count"] > 0*/) {
                     var prettifiedLabel = result.label.substring(0, 80);
                     if (result.label.trim() == "") {
                         prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
@@ -176,7 +176,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             $.each(resultSeries.data, function (key, result) {
 
                 if (result.label == null) result.label = "";
-                if (!(chartConfig.hideEmptyValues && result.label == "") && result["count"] > 0) {
+                if (!(chartConfig.hideEmptyValues && result.label == "")/* && result["count"] > 0*/) {
                     var prettifiedLabel = result.label.substring(0, 80);
                     if (result.label.trim() == "") {
                         prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
@@ -227,15 +227,22 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
                 if (!chartConfig.slider) {
                     getMinMax(chartConfig, chartConfig.sliderFacet, function(minMax) {
-                        chartConfig.slider = new RegionTimeControls({
+                        var options = {
                             parent: $('#' + divId),
                             range: minMax,
+                            date: facetLookup(chartConfig.sliderFacet).dataType == 'tdate',
                             callback: function (value) {
-                                console.log(value)
-                                chartConfig.sliderFq = '&fq=' + chartConfig.sliderFacet + ':[' + value[0] + '%20TO%20' + value[1] + ']';
+                                if (facetLookup(chartConfig.sliderFacet).dataType == 'tdate') {
+                                    var d1 = new Date(value[0]).toISOString();
+                                    var d2 = new Date(value[1]).toISOString();
+                                    chartConfig.sliderFq = '&fq=' + encodeURIComponent(chartConfig.sliderFacet + ':[' + d1 + ' TO ' + d2 + ']');
+                                } else {
+                                    chartConfig.sliderFq = '&fq=' + chartConfig.sliderFacet + ':[' + value[0] + '%20TO%20' + value[1] + ']';
+                                }
                                 createChart(facet, chartConfig, true)
                             }
-                        });
+                        };
+                        chartConfig.slider = new RegionTimeControls(options);
                     });
                 }
 
@@ -389,8 +396,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             valueParam = "&stats=" + chartConfig.valueFacet;
         }
 
-        var xranges = (chartConfig.valueRanges && chartConfig.valueRanges.length>0) ? "&xranges=" + chartConfig.valueRanges : "";
-        var seriesRanges = (chartConfig.seriesRanges && chartConfig.seriesRanges.length>0) ? "&seriesranges=" + chartConfig.seriesRanges : "";
+        var xranges = (chartConfig.valueRanges && chartConfig.valueRanges.length>0) ? "&xranges=" + formatRange(facet, chartConfig.valueRanges) : "";
+        var seriesRanges = (chartConfig.seriesRanges && chartConfig.seriesRanges.length>0) ? "&seriesranges=" + formatRange(chartConfig.seriesFacet, chartConfig.seriesRanges) : "";
         var series = (chartConfig.seriesEnabled && chartConfig.seriesFacet && chartConfig.seriesFacet.length>0) ? "&series=" + chartConfig.seriesFacet : "";
         var seriesFq = "";
         if (chartConfig.seriesEnabled && chartConfig.seriesFq && chartConfig.seriesFq.length > 0) {
@@ -433,6 +440,18 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             }
         });
     };
+
+    var formatRange = function(facet, range) {
+        if (facetLookup(facet).dataType == 'tdate') {
+            var newRange = [];
+            $.each(range.split(','), function (key, value) {
+                newRange.push(new Date(Date.parse(value)).toISOString());
+            });
+            return newRange.join(',');
+        } else {
+            return range;
+        }
+    }
 
     function transparentColors(_c0, p) {
         if (_c0 instanceof Array) {
@@ -814,14 +833,23 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         control.find('.chart-add-value-type').change();
 
         control.find('.chart-add-facet').change(function (evt) {
-            var show =$.inArray(facetLookup(control.find('.chart-add-facet').val()).dataType, ['long', 'tlong', 'int', 'tint', 'double', 'tdouble', 'date', 'tdate']) >= 0;
+            var show = $.inArray(facetLookup(control.find('.chart-add-facet').val()).dataType, ['long', 'tlong', 'int', 'tint', 'double', 'tdouble', 'date', 'tdate']) >= 0;
             controlVisible(control, ['value-ranges'], show);
             if (show) {
                 getMinMax(chartConfig, control.find('.chart-add-facet').val(), function (minMax) {
-                    console.log(minMax);
-                    control.find('.chart-add-value-ranges').attr("placeholder", minMax[0] + ' to ' + minMax[1]);
-                    control.find('.chart-add-value-ranges').attr("title", minMax[0] + ' to ' + minMax[1]);
+                    if (facetLookup(control.find('.chart-add-facet').val()).dataType == 'tdate') {
+                        var d1 = new Date(minMax[0]).toISOString().slice(0,10);
+                        var d2 = new Date(minMax[1]).toISOString().slice(0,10);
+                        var label = d1 + ' to ' + d2;
+                        control.find('.chart-add-value-ranges').attr("placeholder", label);
+                        control.find('.chart-add-value-ranges').attr("title", label);
+                    } else {
+                        control.find('.chart-add-value-ranges').attr("placeholder", minMax[0] + ' to ' + minMax[1]);
+                        control.find('.chart-add-value-ranges').attr("title", minMax[0] + ' to ' + minMax[1]);
+                    }
                 });
+            } else {
+                control.find('.chart-add-value-ranges').val('');
             }
         });
         control.find('.chart-add-facet').change();
@@ -832,11 +860,25 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 controlVisible(control, ['series-ranges'], show);
                 controlVisible(control, ['series-fq'], !show);
                 if (show) {
+                    var select = control.find('.chart-add-series-fq').multiselect('destroy');
+                    select.empty();
+                    control.find('.chart-add-series-fq').val('');
+
                     getMinMax(chartConfig, control.find('.chart-add-series-facet').val(), function (minMax) {
-                        control.find('.chart-add-series-ranges').attr("placeholder", minMax[0] + ' to ' + minMax[1]);
-                        control.find('.chart-add-series-ranges').attr("title", minMax[0] + ' to ' + minMax[1]);
+                        if (facetLookup(control.find('.chart-add-series-facet').val()).dataType == 'tdate') {
+                            var d1 = new Date(minMax[0]).toISOString().slice(0,10);
+                            var d2 = new Date(minMax[1]).toISOString().slice(0,10);
+                            var label = d1 + ' to ' + d2;
+                            control.find('.chart-add-series-ranges').attr("placeholder", label);
+                            control.find('.chart-add-series-ranges').attr("title", label);
+                        } else {
+                            control.find('.chart-add-series-ranges').attr("placeholder", minMax[0] + ' to ' + minMax[1]);
+                            control.find('.chart-add-series-ranges').attr("title", minMax[0] + ' to ' + minMax[1]);
+                        }
                     });
                 } else {
+                    control.find('.chart-add-series-ranges').val('');
+
                     getFacetValues(chartOptions.query, chartOptions.facetQueries, chartOptions.queryContext, chartConfig.filter,
                         control.find('.chart-add-series-facet').val(), function (list) {
                             //rebuild select

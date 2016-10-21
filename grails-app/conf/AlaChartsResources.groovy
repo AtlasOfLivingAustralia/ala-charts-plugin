@@ -5,6 +5,7 @@ modules = {
         resource url: [dir: "js", file: "ALAChart.js", plugin: "ala-charts-plugin"]
         resource url: [dir: "css", file: "ALAChart.css", plugin: "ala-charts-plugin"]
         resource url: [dir: "js", file: "slider.js", plugin: "ala-charts-plugin"]
+        resource url: [dir: "js", file: "moment.min.js", plugin: "ala-charts-plugin"]
     }
 
     bootstrapToggle {

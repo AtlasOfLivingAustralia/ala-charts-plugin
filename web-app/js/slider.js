@@ -19,9 +19,14 @@ var RegionTimeControls = function(config) {
     var minValue;
     var refreshInterval;
     var playTimeRange;
+    var isDate;
 
     var callback;
     var _config;
+
+    var formatDate = function (data) {
+        return new Date(data).toISOString().slice(0, 10);
+    }
 
     var init = function(config) {
         callback = config.callback;
@@ -30,19 +35,37 @@ var RegionTimeControls = function(config) {
         minValue = from = config.range[0];
         maxValue = to = config.range[1];
 
+        isDate = config.date;
+
         updateTimeRange(config.range)
 
         //default step size is 1/10 of range
-        config.parent.find('#stepSize').val((maxValue - minValue) / 10.0);
+        if (isDate) {
+            var diffDays = (maxValue - minValue) / (1000.0*60*60*24);
+            if (diffDays < 30*5) {
+                config.parent.find('#stepSize').val(Math.ceil(diffDays/10) + 'days')
+            } else if(diffDays <= 365*5) {
+                config.parent.find('#stepSize').val(Math.ceil(diffDays/300) + 'months')
+            } else {
+                config.parent.find('#stepSize').val(Math.ceil(diffDays/3650) + 'years')
+            }
+        } else {
+            config.parent.find('#stepSize').val((maxValue - minValue) / 10.0);
+        }
+
+        var sliderOptions = {
+            tooltip: "hide",
+            min: minValue,
+            max: maxValue,
+            range: true,
+            value: [from, to]
+        };
+        if (isDate) {
+            sliderOptions.formatter = formatDate
+        }
 
         timeSlider = config.parent.find('#timeSlider')
-            .slider({
-                tooltip: "hide",
-                min: minValue,
-                max: maxValue,
-                range: true,
-                value: [from, to]
-            }).on('slideStop', function(event, ui) {
+            .slider(sliderOptions).on('slideStop', function(event, ui) {
                 callback(timeSlider.getValue())
                 updateTimeRange(timeSlider.getValue())
             }).on('slide', function(event, ui) {
@@ -76,15 +99,29 @@ var RegionTimeControls = function(config) {
 
     };
 
-    var stepSize = function() {
-        return parseInt(config.parent.find('#stepSize').val());
-    }
+    var stepSize = function(current) {
+        if (isDate) {
+            var step = config.parent.find('#stepSize').val().trim();
+            var value = parseInt(step.replace(/[^\d]/g, ''));
+            var dt = moment(current);
+            if (step.endsWith('d') || step.endsWith('day') || step.endsWith('days')) {
+                return dt.add(value, 'days');
+            } else if (step.endsWith('m') || step.endsWith('month') || step.endsWith('months')) {
+                return dt.add(value, 'months');
+            } else {
+                return dt.add(value, 'years');
+            }
+        } else {
+            return parseInt(config.parent.find('#stepSize').val()) + current;
+        }
+    };
 
     var increaseTimeRangeByADecade = function() {
-        var step = stepSize();
-        var incrementTo = (maxValue - playTimeRange[1]) < step ? maxValue - playTimeRange[1] : step;
-        if (incrementTo != 0) {
-            timeSlider.setValue([playTimeRange[0] + step, playTimeRange[1] + incrementTo], false, true);
+        var step = stepSize(playTimeRange[1]);
+        var incrementTo = step < maxValue ? step : maxValue;
+        var incrementFrom = stepSize(playTimeRange[0]);
+        if (incrementFrom < maxValue) {
+            timeSlider.setValue([incrementFrom, incrementTo], false, true);
             playTimeRange = timeSlider.getValue();
             callback(timeSlider.getValue())
         } else {
@@ -99,13 +136,15 @@ var RegionTimeControls = function(config) {
                 // Start playing from the beginning
                 // Update state before updating slider values
                 state = CONTROL_STATES.PLAYING;
-                timeSlider.setValue([minValue, minValue + stepSize()], false, true);
+                timeSlider.setValue([minValue, stepSize(minValue)], false, true);
+                callback(timeSlider.getValue())
                 break;
             case CONTROL_STATES.PAUSED:
                 // Resume playing
                 // Update state before updating slider values
                 state = CONTROL_STATES.PLAYING;
                 timeSlider.setValue([playTimeRange[0], playTimeRange[1]], false, true);
+                callback(timeSlider.getValue())
                 break;
         }
 
@@ -137,13 +176,19 @@ var RegionTimeControls = function(config) {
     var reset = function() {
         timeSlider.setValue([minValue, maxValue], false, true);
         stop();
-        //regionWidget.updateDateRange(minValue, maxValue);
-        console.log(minValue + ' ' + maxValue)
+
+        callback([minValue, maxValue]);
+        updateTimeRange([minValue, maxValue]);
     };
 
     var updateTimeRange = function(values) {
-        _config.parent.find('#timeFrom').text(values[0]);
-        _config.parent.find('#timeTo').text(values[1]);
+        if (isDate) {
+            _config.parent.find('#timeFrom').text(formatDate(values[0]));
+            _config.parent.find('#timeTo').text(formatDate(values[1]));
+        } else {
+            _config.parent.find('#timeFrom').text(values[0]);
+            _config.parent.find('#timeTo').text(values[1]);
+        }
     };
 
     var _public = {
