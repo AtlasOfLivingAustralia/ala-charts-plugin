@@ -10,6 +10,9 @@
 .chart-delete { float: left; margin-top: -20px; }
 .chart-controls-toggle { display: block; }
 
+#userCharts>.chart {
+    width: 100%;
+}
 
 
 #timeControls {
@@ -90,4 +93,24 @@
     background: url("../images/reset-on.png") no-repeat ;
     background-size: 26px 26px;
     display: inline-block;
+}
+
+#stepSize {
+    width: 50px;
+    font-size: 10px;
+    margin-top: -15px;
+}
+
+.multiselect-container>li>a>label {
+    padding: 4px 20px 3px 20px;
+}
+
+.multiselect-container>.checkbox input[type="checkbox"] {
+    float: none;
+    margin-left: -10px;
+}
+
+.multiselect-container .checkbox input[type="checkbox"] {
+    float: none;
+    margin-left: -10px;
 }

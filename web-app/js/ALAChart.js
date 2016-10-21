@@ -502,6 +502,12 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             $topDiv.width('45%');
         }
 
+        if (chartConfig.large) {
+            $topDiv.width('90%');
+        } else {
+            $topDiv.width('45%');
+        }
+
         var $title = $('<h3/>').addClass('chart-title').html(title);
         var $canvas = $('<canvas/>').addClass('chart-canvas');
         var $legend = $('<div/>').addClass('chart-legend').addClass('ala-doughnut-legend');
@@ -540,7 +546,10 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         if (!exists) {
             $('#' + chartsDivId).append($topDiv);
         }
+<<<<<<< HEAD
         //$('#' + chartsDivId).append($topDiv).find('.bootToggle').bootstrapToggle({
+=======
+>>>>>>> origin/sandbox
         $topDiv.find('.bootToggle').bootstrapToggle({
             on: 'hide',
             off: 'show',
@@ -1049,7 +1058,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 $('#' + chartsDivId).prepend(ctrl);
                 createControl( ctrl, false, {}, {});
                 //$('#' + chartsDivId).parent().prepend(btn); // place outside the row-fluid div so charts don't get moved/nudged
-
 
                 //hide controls
                 ctrl.children('.chart-add:first').toggle();
