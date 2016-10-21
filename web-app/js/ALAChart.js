@@ -103,7 +103,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @returns {{labels: Array, datasets: Array, maxValue: undefined, labelToFq: Map}}
      */
     var createDatastructure = function(data, chartConfig, facet) {
-        var type = (chartConfig.valueType) ? chartConfig.valueType : 'count';
+        //workaround for bug where valueFacet is undefined and valueType != count
+        var type = (chartConfig.valueType && chartConfig.valueFacet) ? chartConfig.valueType : 'count';
 
         var datastructure = {
             labels: [],
@@ -166,7 +167,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @returns {*}
      */
     var updateDatastructure = function(datastructure, data, chartConfig) {
-        var type = (chartConfig.valueType) ? chartConfig.valueType : 'count';
+        //workaround for bug where valueFacet is undefined and valueType != count
+        var type = (chartConfig.valueType && chartConfig.valueFacet) ? chartConfig.valueType : 'count';
 
         $.each(data, function (keySeries, resultSeries) {
             var labelFound = new Array(datastructure.labels.length);
@@ -383,7 +385,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         if (chartConfig.sliderEnabled) query += "&fq=" + encodeURIComponent(chartConfig.sliderFacet + ":*");
 
         var valueParam = "";
-        if (chartConfig.valueType && chartConfig.valueType.length > 0 && chartConfig.valueType != "count") {
+        if (chartConfig.valueType && chartConfig.valueType.length > 0 && chartConfig.valueType != "count" && chartConfig.valueFacet) {
             valueParam = "&stats=" + chartConfig.valueFacet;
         }
 
@@ -493,19 +495,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             console.log("div NOT exists");
             chartConfig.divId = divId;
             chartCounter++;
-            $topDiv = $('<div/>').addClass('chart span6').attr('id', divId);
+            $topDiv = $('<div/>').addClass('chart').attr('id', divId);
         }
 
         if (chartConfig.large) {
-            $topDiv.width('90%');
+            $topDiv.width('100%');
         } else {
-            $topDiv.width('45%');
-        }
-
-        if (chartConfig.large) {
-            $topDiv.width('90%');
-        } else {
-            $topDiv.width('45%');
+            $topDiv.width('50%');
         }
 
         var $title = $('<h3/>').addClass('chart-title').html(title);
@@ -546,7 +542,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         if (!exists) {
             $('#' + chartsDivId).append($topDiv);
         }
-        //$('#' + chartsDivId).append($topDiv).find('.bootToggle').bootstrapToggle({
 
         $topDiv.find('.bootToggle').bootstrapToggle({
             on: 'hide',
@@ -685,16 +680,16 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             (defaults && defaults.valueType) ? defaults.valueType : 'count', 'Secondary axis "value", default is record count');
 
         var seriesEnabled = createCheckboxInput('Series enabled', 'series-enabled',
-            (defaults && defaults.seriesEnabled) ? defaults.seriesEnabled : false, 'Define what series is here');
+            (defaults && defaults.seriesEnabled) ? defaults.seriesEnabled : false, 'Include additional data series on the chart.');
 
         var sliderEnabled = createCheckboxInput('Slider enabled', 'slider-enabled',
             (defaults && defaults.sliderEnabled) ? defaults.sliderEnabled : false, 'Add a slider to change the 3rd axis (usually date)');
 
         var seriesRanges = createTextInput('Series ranges', 'series-ranges',
-            (defaults && defaults.seriesRanges) ? defaults.seriesRanges : '', 'Enter a value for the range "size"');
+            (defaults && defaults.seriesRanges) ? defaults.seriesRanges : '', 'Enter comma delimited list to group selected series values. The list should begin with the min value and end with the max value. e.g. "0,0.2,1" will produce the groups "0 to 0.2", "0.2 to 1".');
 
         var valueRanges = createTextInput('Facet ranges', 'value-ranges',
-            (defaults && defaults.valueRanges) ? defaults.valueRanges : '', 'Enter a value for the range "size"');
+            (defaults && defaults.valueRanges) ? defaults.valueRanges : '', 'Enter comma delimited list to group selected facet values. The list should begin with the min value and end with the max value. e.g. "0,0.2,1" will produce the groups "0 to 0.2", "0.2 to 1".');
 
         var chartType = createSelectInput('Chart type', 'chart-type', [ 'bar', 'horizontalBar', 'doughnut', 'pie', 'line' ],
             (defaults && defaults.chartType) ? defaults.chartType : 'bar', 'chart type is self explanatory');
@@ -712,7 +707,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             (defaults && defaults.logarithmic) ? defaults.logarithmic : false, 'Value axis will show logarithmic scale - use for large range of values in data');
 
         var facet = createSelectInput('Facet', 'facet', [] , '', 'Choose a facet field for the first axis of the chart - see the filter column for facets that have values in your data');
-        var valueFacet = createSelectInput('Value facet', 'value-facet', [] , '', 'Choose a facet field for the secondary axis of the chart - values are computed using hte "Value" type chosen');
+        var valueFacet = createSelectInput('Value facet', 'value-facet', [] , '', 'Choose a facet field for the secondary axis of the chart - values are computed using the "Value" type chosen');
         var seriesFacet = createSelectInput('Series facet', 'series-facet', [] , '', 'Choose a facet field for the "series" axis of the chart');
         var sliderFacet = createSelectInput('Slider facet', 'slider-facet', [] , '', 'Choose a facet field for the "slider" axis of the chart');
         $(_facets).each(function (key, value) {
@@ -1011,22 +1006,26 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      */
     var getMinMax = function(chartConfig, facet, successCallback, failureCallback) {
 
-        //setup chart config to fetch min/max of facet
-        var config = jQuery.extend(true, {}, chartConfig);
-        config.valueType = 'max';
-        config.valueFacet = facet;
-        config.facet = null;
-        config.seriesEnabled = false;
-        config.sliderFq = '';
-        config.valueRanges = [];
+        if (facet) {
+            //setup chart config to fetch min/max of facet
+            var config = jQuery.extend(true, {}, chartConfig);
+            config.valueType = 'max';
+            config.valueFacet = facet;
+            config.facet = null;
+            config.seriesEnabled = false;
+            config.sliderFq = '';
+            config.valueRanges = [];
 
-        wsCallAndRender(config, chartOptions.query, config.facet, chartOptions.facetQueries, chartOptions.queryContext, config.filter, config.divId, function (data) {
-            if (data.length > 0 && data[0].data.length > 0) {
-                successCallback([data[0].data[0]['min'], data[0].data[0]['max']]);
-            } else if (failureCallback) {
-                failureCallback();
-            }
-        });
+            wsCallAndRender(config, chartOptions.query, config.facet, chartOptions.facetQueries, chartOptions.queryContext, config.filter, config.divId, function (data) {
+                if (data.length > 0 && data[0].data.length > 0) {
+                    successCallback([data[0].data[0]['min'], data[0].data[0]['max']]);
+                } else if (failureCallback) {
+                    failureCallback();
+                }
+            });
+        } else {
+            if (failureCallback) failureCallback();
+        }
     };
 
     /**
