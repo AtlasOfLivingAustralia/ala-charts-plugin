@@ -546,10 +546,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         if (!exists) {
             $('#' + chartsDivId).append($topDiv);
         }
-<<<<<<< HEAD
         //$('#' + chartsDivId).append($topDiv).find('.bootToggle').bootstrapToggle({
-=======
->>>>>>> origin/sandbox
+
         $topDiv.find('.bootToggle').bootstrapToggle({
             on: 'hide',
             off: 'show',
