@@ -410,11 +410,16 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         if (!chartConfig.sliderFq) chartConfig.sliderFq = '';
 
+        var includeOther = (chartConfig.includeOther) ? "&sxinclude=" + chartConfig.includeOther : "";
+        var includeOtherSeries = (chartConfig.includeOtherSeries) ? "&seriesinclude=" + chartConfig.includeOtherSeries : "";
+        var includeMissing = (chartConfig.hideEmptyValues) ? "&xmissing=" + (!chartConfig.hideEmptyValues) : "";
+
         var x = (facet) ? "&x=" + facet : "";
 
         //default search service
         var queryUrl = chartOptions.biocacheServiceUrl + "/chart.json?q=" + query +
-            x + xranges +"&qc=" + queryContext + valueParam + chartConfig.sliderFq + seriesRanges + series + seriesFq;
+            x + xranges +"&qc=" + queryContext + valueParam + chartConfig.sliderFq + seriesRanges + series + seriesFq +
+            includeOther + includeOtherSeries + includeMissing;
 
         if(additionalFilter) {
             queryUrl = queryUrl + '&' + additionalFilter;
@@ -429,7 +434,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 alert("error");
             },
             success: function(data) {
-                dataCallback(data);
+                dataCallback(data.data);
             },
             error: function(data) {
                 //return no data instead of error
@@ -717,6 +722,12 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         var hideEmptyValues = createCheckboxInput('Hide empty values', 'hide-empty-values',
             (defaults && defaults.hideEmptyValues) ? defaults.hideEmptyValues : true, 'empty value will be removed from chart');
 
+        var includeOther = createCheckboxInput('Include "Other".', 'include-other',
+            (defaults && defaults.includeOther) ? defaults.includeOther : true, 'Charts have a limit on the number of facets that will be displayed. Including "Other" will group all the excluded facets together.');
+
+        var includeOtherSeries = createCheckboxInput('Include "Other" for the series.', 'include-other-series',
+            (defaults && defaults.includeOtherSeries) ? defaults.includeOtherSeries : true, 'Charts have a limit on the number of series that will be displayed. Including "Other" will group all the excluded series together.');
+
         var largeChart = createCheckboxInput('Large chart', 'large',
             (defaults && defaults.large) ? defaults.large : false, 'Chart will take up the full width of the surrounding block');
 
@@ -748,7 +759,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         if (defaults && defaults.seriesFacet) seriesFacet.find('select').val(defaults.seriesFacet);
         if (defaults && defaults.sliderFacet) sliderFacet.find('select').val(defaults.sliderFacet);
 
-        var seriesFq = createSelectInput('Series facet', 'series-fq', [] , '');
+        var seriesFq = createSelectInput('Series facet', 'series-fq', [] , '', 'Restrict which series values to include.');
 
         var button;
         if (editchart) {
@@ -770,6 +781,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         control.append(button);
         control.append(hideEmptyValues);
         control.append(emptyValueMsg);
+        control.append(includeOther);
         control.append(logarithmic);
         control.append(sliderEnabled);
         control.append(sliderFacet);
@@ -777,6 +789,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         control.append(seriesFacet);
         control.append(seriesRanges);
         control.append(seriesFq);
+        control.append(includeOtherSeries);
         control.append(button);
 
         parent.append(control);
@@ -794,7 +807,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         control.find('.chart-add-chart-type').change(function (evt) {
             var show = control.find('.chart-add-chart-type').val() != 'pie' && control.find('.chart-add-chart-type').val() != 'doughnut';
-            controlVisible(control, ['logarithmic', 'slider-facet', 'series-enabled', 'series-facet', 'series-ranges'], show);
+            controlVisible(control, ['logarithmic', 'slider-facet', 'series-enabled', 'series-facet', 'series-ranges', 'include-other-series'], show);
             if (show) {
                 //show controls that are enabled and apply to charts that are not pie or doughnut
                 control.find('.chart-add-slider-enabled').change();
@@ -808,7 +821,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         control.find('.chart-add-series-enabled').change(function (evt) {
             var show = control.find('.chart-add-series-enabled').prop('checked');
-            controlVisible(control, ['series-facet', 'series-ranges', 'series-fq'], show);
+            controlVisible(control, ['series-facet', 'series-ranges', 'series-fq', 'include-other-series'], show);
             if (show) {
                 control.find('.chart-add-series-facet').change();
             }
@@ -856,7 +869,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             if (control.find('.chart-add-series-enabled').prop('checked')) {
                 var show = $.inArray(facetLookup(control.find('.chart-add-series-facet').val()).dataType, ['long', 'tlong', 'int', 'tint', 'double', 'tdouble', 'date', 'tdate']) >= 0;
                 controlVisible(control, ['series-ranges'], show);
-                controlVisible(control, ['series-fq'], !show);
+                controlVisible(control, ['series-fq', 'include-other-series'], !show);
                 if (show) {
                     var select = control.find('.chart-add-series-fq').multiselect('destroy');
                     select.empty();
@@ -899,7 +912,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                         });
                 }
             } else {
-                controlVisible(control, ['series-ranges', 'series-fq'], false);
+                controlVisible(control, ['series-ranges', 'series-fq', 'include-other-series'], false);
             }
         });
         control.find('.chart-add-series-facet').change();
@@ -1032,7 +1045,9 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             seriesRanges: $topDiv.find('.chart-add-series-ranges').val(),
             sliderFacet: $topDiv.find('.chart-add-slider-facet').val(),
             logarithmic: $topDiv.find('.chart-add-logarithmic').prop('checked'),
-            seriesFq: $topDiv.find('.chart-add-series-fq').val()
+            seriesFq: $topDiv.find('.chart-add-series-fq').val(),
+            includeOtherSeries: $topDiv.find('.chart-add-include-other-series').prop('checked'),
+            includeOther: $topDiv.find('.chart-add-include-other').prop('checked')
         };
     };
 
