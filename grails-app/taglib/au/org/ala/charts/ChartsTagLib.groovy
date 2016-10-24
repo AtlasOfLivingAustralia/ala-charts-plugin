@@ -24,10 +24,14 @@ class ChartsTagLib {
             query : attrs.q ?: '*:*',                       // 'lsid:\"${tc.taxonConcept.guid}\"'
             queryContext : attrs.qc ?: '',                  // 'cl2:Scotland'
             facetQueries : attrs.fq ?: [],
-            charts : getChartConfig().biocache
+            charts : getChartConfig().biocache,
+            chartControls : attrs.chartControls ?: false,
+            chartControlsCallback: attrs.chartControlsCallback
         ]
 
-        out << "var chartConfig = ${(jsonConfig as JSON).toString()};"
+        def chartVariableName = attrs.chartVariableName ?: 'chartConfig'
+
+        out << "var ${chartVariableName} = ${(jsonConfig as JSON).toString()};"
         if (attrs?.autoLoad != 'false')
             out << "var charts = ALA.BiocacheCharts('charts', chartConfig);"
     }
