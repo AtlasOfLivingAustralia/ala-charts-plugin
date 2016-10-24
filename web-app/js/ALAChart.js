@@ -519,8 +519,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         if (chartConfig.large) {
             $topDiv.width('100%');
-        } else {
-            $topDiv.width('50%');
         }
 
         var $title = $('<h3/>').addClass('chart-title').html(title);
