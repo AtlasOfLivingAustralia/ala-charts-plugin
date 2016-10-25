@@ -410,8 +410,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         if (!chartConfig.sliderFq) chartConfig.sliderFq = '';
 
-        var includeOther = (chartConfig.includeOther) ? "&xinclude=" + chartConfig.includeOther : "";
-        var includeOtherSeries = (chartConfig.includeOtherSeries) ? "&seriesinclude=" + chartConfig.includeOtherSeries : "";
+        var includeOther = (chartConfig.includeOther) ? "&xother=" + chartConfig.includeOther : "";
+        var includeOtherSeries = (chartConfig.includeOtherSeries) ? "&seriesother=" + chartConfig.includeOtherSeries : "";
         var includeMissing = (chartConfig.hideEmptyValues) ? "&xmissing=" + (!chartConfig.hideEmptyValues) : "";
 
         var x = (facet) ? "&x=" + facet : "";
@@ -720,13 +720,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             (defaults && defaults.emptyValueMsg) ? defaults.emptyValueMsg : 'Unknown', 'This text will appear when no value is present in the data');
 
         var hideEmptyValues = createCheckboxInput('Hide empty values', 'hide-empty-values',
-            (defaults && defaults.hideEmptyValues) ? defaults.hideEmptyValues : true, 'empty value will be removed from chart');
+            (defaults && defaults.hideEmptyValues !== undefined) ? defaults.hideEmptyValues : true, 'empty value will be removed from chart');
 
         var includeOther = createCheckboxInput('Include "Other".', 'include-other',
-            (defaults && defaults.includeOther) ? defaults.includeOther : true, 'Charts have a limit on the number of facets that will be displayed. Including "Other" will group all the excluded facets together.');
+            (defaults && defaults.includeOther) ? defaults.includeOther : false, 'Charts have a limit on the number of facets that will be displayed. Including "Other" will group all the excluded facets together.');
 
         var includeOtherSeries = createCheckboxInput('Include "Other" for the series.', 'include-other-series',
-            (defaults && defaults.includeOtherSeries) ? defaults.includeOtherSeries : true, 'Charts have a limit on the number of series that will be displayed. Including "Other" will group all the excluded series together.');
+            (defaults && defaults.includeOtherSeries) ? defaults.includeOtherSeries : false, 'Charts have a limit on the number of series that will be displayed. Including "Other" will group all the excluded series together.');
 
         var largeChart = createCheckboxInput('Large chart', 'large',
             (defaults && defaults.large) ? defaults.large : false, 'Chart will take up the full width of the surrounding block');
