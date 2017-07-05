@@ -22,6 +22,7 @@
     margin-bottom: 20px;
     display: inline-block;
     padding-right: 10px;
+    vertical-align: top;
 }
 .chart-add {
     background-color: #f5f5f5;

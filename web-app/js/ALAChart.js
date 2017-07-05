@@ -312,7 +312,9 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             $canvas.click(
                 function (evt) {
                     var activePoints = chart.getElementsAtEvent(evt);
-                    var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + query + "&fq=" + labelToFq[activePoints[0]._model.label];
+                    var chartLabels = Object.keys(labelToFq);
+                    var selectedKey = chartLabels[activePoints[0]._index];
+                    var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + chartOptions.query + "&fq=" + labelToFq[selectedKey];
                     window.location.href = url;
                 }
             );
@@ -330,7 +332,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                         type: 'logarithmic',
                         ticks: {
                             //fixed chart maximum even when slider changes
-                            max: maxValue,
+                            max: maxValue
                         }
                     }]
                 }
@@ -425,6 +427,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             queryUrl = queryUrl + '&' + additionalFilter;
         }
 
+        //console.log(queryUrl);
+
         if (divId) $('#' + divId).find('.chart-loading').show();
 
         $.ajax({
@@ -502,13 +506,14 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      * @returns {string}
      */
     var createCanvasAndLegend = function(facet, title, chartConfig){
-        console.log("createCanvasAndLegend",title,chartConfig.divId);
+        //console.log("createCanvasAndLegend",title,chartConfig.divId);
         var divId = facet + '-chart-' + chartCounter;
+        var divIdWithoutCounter = facet + '-chart';
         var $topDiv;
         var checked = "";
         var exists = false;
         if (chartConfig && chartConfig.divId && $('#' + chartConfig.divId).size() > 0) {
-            console.log("div existst");
+            //console.log("div exists");
             //top div already exists, replace contents
             divId = chartConfig.divId;
             $topDiv = $('#' + divId);
@@ -516,10 +521,10 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             checked = "checked";
             exists = true;
         } else {
-            console.log("div NOT exists");
+            //console.log("div NOT exists");
             chartConfig.divId = divId;
             chartCounter++;
-            $topDiv = $('<div/>').addClass('chart').attr('id', divId);
+            $topDiv = $('<div/>').addClass('chart').addClass(divIdWithoutCounter).attr('id', divId);
         }
 
         if (chartConfig.large) {
@@ -593,7 +598,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
     }
 
     function toggleChart(event) {
-        console.log("toggleChart",$(event.target),$(event.target).is(":checked"));
+        //console.log("toggleChart",$(event.target),$(event.target).is(":checked"));
         if ($(event.target).is(":checked")) {
             showChart(event);
         } else {
@@ -614,7 +619,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         if (chart.children('.chart-canvas').size() == 0 && chart.children('.chart-canvas').size() == 0) {
             //create chart
-            console.log("create chart");
+            //console.log("create chart");
             var divId = chart.attr('id');
             for (var key in chartOptions.charts) {
                 if (chartOptions.charts[key].divId == divId) {
@@ -622,7 +627,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 }
             }
         } else {
-            console.log("just show chart");
+            //console.log("just show chart");
             chart.children('.chart-canvas').show()
             chart.children('.chart-legend').show()
             chart.children('.chart-no-data-label').show()
@@ -982,7 +987,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
     var addChart = function(event) {
         var options = getChartConfig($(event.target).closest('.chart-add'));
 
-        console.log(options);
+        //console.log(options);
 
         createChart(options.facet, options);
 
@@ -1107,7 +1112,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 return (name1 < name2) ? -1 : (name1 > name2) ? 1 : 0;
             });
 
-            console.log('init chart controls');
+            //console.log('init chart controls');
 
             if (chartOptions.chartControls) {
                 var ctrl = $('<div/>').append($('<button>Toggle Chart Controls</button>').addClass('chart-controls-toggle').addClass('btn').click(toggleAddControls))
