@@ -1,4 +1,5 @@
 modules = {
+    // assets pipeline replaces this module with ala/ala-chart.js and ala/ala-chart.css
     charts {
         dependsOn 'bootstrapToggle', 'bootstrapMultiselect'
         resource url: [dir: "js", file: "Chart.min.js", plugin: "ala-charts-plugin"]

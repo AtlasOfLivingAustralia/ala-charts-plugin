@@ -1,0 +1,11 @@
+<plugin name='ala-charts-plugin' version='1.3-SNAPSHOT' grailsVersion='2.3 &gt; *'>
+  <author>AtlasOfLivingAustralia</author>
+  <authorEmail>support@ala.org.au</authorEmail>
+  <title>ALA Charts Plugin</title>
+  <description>Standard ALA Charts implementation</description>
+  <type>AlaChartsPluginGrailsPlugin</type>
+  <resources>
+    <resource>AlaChartsResources</resource>
+    <resource>au.org.ala.charts.ChartsTagLib</resource>
+  </resources>
+</plugin>
