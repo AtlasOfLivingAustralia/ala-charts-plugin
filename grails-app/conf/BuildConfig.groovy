@@ -25,9 +25,10 @@ grails.project.dependency.resolution = {
     }
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
-        grailsCentral()
         mavenLocal()
-        mavenCentral()
+        mavenRepo ("https://nexus.ala.org.au/content/groups/public/") {
+            updatePolicy 'always'
+        }
         // uncomment the below to enable remote dependency resolution
         // from public Maven repositories
         //mavenRepo "http://repository.codehaus.org"
