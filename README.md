@@ -74,7 +74,7 @@ For biocache charts, the name of the chart must be an indexed and public field.
 To use the grails taglib to render the charts:
 
 ```
-<r:script>
+<asset:script type="text/javascript">
     <charts:biocache
         biocacheServiceUrl="http://biocache.ala.org.au/ws"
         biocacheWebappUrl="http://biocache.ala.org.au"
@@ -82,6 +82,6 @@ To use the grails taglib to render the charts:
         qc=""
         fq=""
     />    
-</r:script>
+</asset:script>
 
 ```
