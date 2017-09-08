@@ -5,6 +5,6 @@
 //= require bootstrapMultiselect
 //= require Chart.min.js
 //= require ALAChart.js
-//= require slider.js
+//= require regionTimeControls.js
 //= require moment.min.js
  */
