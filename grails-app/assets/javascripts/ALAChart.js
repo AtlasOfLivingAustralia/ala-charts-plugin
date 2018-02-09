@@ -121,7 +121,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             if (overrideColor) segmentColor = "#97BBCD";
 
             datastructure.datasets[keySeries] = {
-                label: chartConfig.title,
+                label: jQuery.i18n.prop(chartConfig.title),
                 backgroundColor: transparentColors(segmentColor,50),
                 data: []
             };
@@ -140,7 +140,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
                 if (result.label == null) result.label = "";
                 if (!(chartConfig.hideEmptyValues && result.label == "")/* && result["count"] > 0*/) {
-                    var prettifiedLabel = result.label.substring(0, 80);
+
+                    var i18n = jQuery.i18n.prop(result.label)
+                    if(i18n.includes("[")){
+                        i18n = result.label
+                    }
+
+                    var prettifiedLabel = i18n.substring(0, 80);
                     if (result.label.trim() == "") {
                         prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
                     }
@@ -438,6 +444,10 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 alert("error");
             },
             success: function(data) {
+
+                console.log("chart data...");
+                console.log(data);
+
                 dataCallback(data.data);
             },
             error: function(data) {
@@ -663,7 +673,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
     var createTextInput = function(label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+            append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append($('<input/>').addClass('chart-add-' + clas).val(value));
     };
 
@@ -675,13 +685,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         select.val(defaultValue);
 
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+            append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append(select);
     };
 
     var createCheckboxInput = function (label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+            append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append($('<input/>').addClass('chart-add-' + clas).attr('type', 'checkbox').prop('checked', value));
     };
 
@@ -818,7 +828,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 control.find('.chart-add-slider-enabled').change();
                 control.find('.chart-add-value-type').change();
                 control.find('.chart-add-series-facet').change();
-
                 control.find('.chart-add-series-enabled').change();
             }
         });
@@ -986,8 +995,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      */
     var addChart = function(event) {
         var options = getChartConfig($(event.target).closest('.chart-add'));
-
-        //console.log(options);
 
         createChart(options.facet, options);
 
