@@ -8,6 +8,11 @@ across the ALA. This plugin is currently only supporting charts
 on top of biocache services but could be extended to include other
 services (e.g. logger services, ecodata services).
 
+## Versions
+
+* 1.3.x is built with grails 2.5.x and supports bootstrap 3
+* 1.4.x is built with grails 3.x and supports bootstrap 3
+
 ## Usage instructions
 
 To use the plugin you need to set up a external JSON configuration file for the charts.
