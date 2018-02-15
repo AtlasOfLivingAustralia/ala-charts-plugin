@@ -121,11 +121,11 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             if (overrideColor) segmentColor = "#97BBCD";
 
             datastructure.datasets[keySeries] = {
-                label: chartConfig.title,
+                label: jQuery.i18n.prop(chartConfig.title),
                 backgroundColor: transparentColors(segmentColor,50),
                 data: []
             };
-            
+
             //set additional colors for bar horizontal-bar
             if ($.inArray(chartConfig.chartType, ['bar', 'horizontal-bar', 'horizontalBar']) >= 0) {
                 datastructure.datasets[keySeries].borderColor = transparentColors(segmentColor, 85);
@@ -140,7 +140,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
                 if (result.label == null) result.label = "";
                 if (!(chartConfig.hideEmptyValues && result.label == "")/* && result["count"] > 0*/) {
-                    var prettifiedLabel = result.label.substring(0, 80);
+
+                    var i18n = jQuery.i18n.prop(result.label)
+                    if(i18n.includes("[")){
+                        i18n = result.label
+                    }
+
+                    var prettifiedLabel = i18n.substring(0, 80);
                     if (result.label.trim() == "") {
                         prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
                     }
@@ -405,8 +411,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         if (chartConfig.seriesEnabled && chartConfig.seriesFq && chartConfig.seriesFq.length > 0) {
             seriesFq = "&fq="
             $.each(chartConfig.seriesFq, function (key, value) {
-               if (seriesFq.length > 4) seriesFq += "%20OR%20";
-               seriesFq += '(' + encodeURIComponent(value) + ')';
+                if (seriesFq.length > 4) seriesFq += "%20OR%20";
+                seriesFq += '(' + encodeURIComponent(value) + ')';
             });
         }
 
@@ -438,6 +444,10 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 alert("error");
             },
             success: function(data) {
+
+                console.log("chart data...");
+                console.log(data);
+
                 dataCallback(data.data);
             },
             error: function(data) {
@@ -561,7 +571,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                     </div>\
                 </div>\
             </ul>').hide());
-        
+
         if (chartConfig && !chartConfig.hideOnce) {
             $topDiv.append($canvas).append($legend).append($progress);
         }
@@ -663,8 +673,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
     var createTextInput = function(label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
-            append($('<input/>').addClass('chart-add-' + clas).val(value));
+        append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+        append($('<input/>').addClass('chart-add-' + clas).val(value));
     };
 
     var createSelectInput = function(label, clas, values, defaultValue, hint) {
@@ -675,14 +685,14 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         select.val(defaultValue);
 
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
-            append(select);
+        append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+        append(select);
     };
 
     var createCheckboxInput = function (label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
-            append($('<input/>').addClass('chart-add-' + clas).attr('type', 'checkbox').prop('checked', value));
+        append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+        append($('<input/>').addClass('chart-add-' + clas).attr('type', 'checkbox').prop('checked', value));
     };
 
     var createHintIcon = function(hint) {
@@ -769,9 +779,9 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         var button;
         if (editchart) {
             button = $('<div/>').
-                append($('<button>Apply changes</button>').addClass('chart-add-button').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(applyChartChanges)).
-                //toggle edit controls
-                append($('<button>Cancel</button>').addClass('chart-add-cancel').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(editChart));
+            append($('<button>Apply changes</button>').addClass('chart-add-button').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(applyChartChanges)).
+            //toggle edit controls
+            append($('<button>Cancel</button>').addClass('chart-add-cancel').addClass('btn').addClass('btn-xs').addClass('btn-mini').click(editChart));
         } else {
             button = $('<button>Add new chart</button>').addClass('chart-add-button').addClass('btn').click(addChart);
         }
@@ -818,7 +828,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 control.find('.chart-add-slider-enabled').change();
                 control.find('.chart-add-value-type').change();
                 control.find('.chart-add-series-facet').change();
-
                 control.find('.chart-add-series-enabled').change();
             }
         });
@@ -986,8 +995,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
      */
     var addChart = function(event) {
         var options = getChartConfig($(event.target).closest('.chart-add'));
-
-        //console.log(options);
 
         createChart(options.facet, options);
 
