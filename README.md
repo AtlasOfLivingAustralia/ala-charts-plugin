@@ -1,5 +1,11 @@
 ###    [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/ala-charts-plugin.svg?branch=master)](https://travis-ci.org/AtlasOfLivingAustralia/ala-charts-plugin)
 
+The grails2 branch contains the 1.3.x series of the plugin compatible with Grails 2.x
+
+The master branch hosts version 2.x and forward of the plugin compatible with grails 3.x
+
+
+
 ## Why ?
 
 Charts are used in multiple places within the Atlas.
@@ -79,7 +85,7 @@ For biocache charts, the name of the chart must be an indexed and public field.
 To use the grails taglib to render the charts:
 
 ```
-<r:script>
+<asset:script type="text/javascript">
     <charts:biocache
         biocacheServiceUrl="http://biocache.ala.org.au/ws"
         biocacheWebappUrl="http://biocache.ala.org.au"
@@ -87,6 +93,6 @@ To use the grails taglib to render the charts:
         qc=""
         fq=""
     />    
-</r:script>
+</asset:script>
 
 ```

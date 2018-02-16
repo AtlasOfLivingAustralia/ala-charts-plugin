@@ -1,7 +1,8 @@
 gradle*
-.gradle
 build
 out
 *.iml
 target
 .slcache
+.idea
+/.gradle/
