@@ -444,10 +444,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 alert("error");
             },
             success: function(data) {
-
-                console.log("chart data...");
-                console.log(data);
-
                 dataCallback(data.data);
             },
             error: function(data) {
