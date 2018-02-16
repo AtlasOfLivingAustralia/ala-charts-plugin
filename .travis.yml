@@ -5,6 +5,7 @@ sudo: false
 branches:
   only:
   - master
+  - 1.3.x
   - grails-jdk-upgrade
   - bs3-with-grails3
 before_cache:
