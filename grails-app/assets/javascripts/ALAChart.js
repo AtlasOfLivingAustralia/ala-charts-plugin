@@ -284,9 +284,90 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         }
     };
 
+    /**
+     * Estimate no. of characters in labels for horizontal- / bar / line charts that will prevent initial characters running
+     * off left / bottom of canvas area
+     *
+     * @param chart
+     * @param chartType
+     */
+    var getChartLabelMaxLen = function(chart, chartType) {
+        //allow up to 45% for legend; more than 50% means it gets trimmed
+        if (chartType == 'horizontalBar') {
+            var maxPx = chart.chart.width * 0.45; 
+        } else if (chartType == 'bar' || chartType == 'line') {
+            var maxPx = chart.chart.height * 0.45;
+        }
+        var fontSizePx = chart.options.defaultFontSize; //might need to get pixel size out of chart.legend.ctx.font string
+
+        var chars = (maxPx / fontSizePx)*2; // more accurate would be to take the actual label text and append it
+                                            // char by char to a div of the right width until the div grows in height
+                                            // but that seems a little over the top
+        return chars;
+    }
+
+    /**
+     * Estimate space needed (px) that will accommodate a list of labels
+     *
+     * @param chart
+     */
+    var getChartLabelSpace = function(chart) {
+        var noSeries = chart.data.labels.length;
+        var fontSizePx = chart.options.defaultFontSize; //might need to get pixel size out of chart.legend.ctx.font string
+        return noSeries * fontSizePx * 1.5;
+    }
+
+    /**
+     * Adjust horizontal- / bar / line charts by trimming labels and resizing as needed
+     * Driven by optional charts.json bool settings "growToFit" and "trimLabels"
+     *
+     * @param datastructure
+     * @param chartType
+     * @param chartConfig
+     * @param chart
+     * @param divId
+     */
+    var adjustChartLabelsAndSize = function(datastructure, chartType, chartConfig, chart, divId) {
+        if (chartType == 'horizontalBar' || chartType == 'bar' || chartType == 'line') {
+            if (chartConfig.trimLabels) {
+                var maxLen = getChartLabelMaxLen(chart, chartType);
+                for (var i = 0; i < datastructure.labels.length; i++) {
+                    if (datastructure.labels[i].length > maxLen)
+                        datastructure.labels[i] = datastructure.labels[i].substring(0, maxLen - 3) + '...';
+                }
+            }
+            if (chartConfig.growToFit) {
+                var reSize = getChartLabelSpace(chart);
+                if (chartType == 'horizontalBar') {
+                    if ($('#' + divId).height() < reSize) {
+                        chart.options.maintainAspectRatio = false;
+                        $('#' + divId).height(reSize);
+                        chart.resize();
+                    }
+                } else if (chartType == 'bar' || chartType == 'line') {
+                    if ($('#' + divId).width() < reSize) {
+                        chart.options.maintainAspectRatio = false;
+                        chart.scales["x-axis-0"].options.ticks.autoSkip = false;
+                        chart.scales["x-axis-0"].options.ticks.stepSize = 1;
+                        $('#' + divId).width(reSize);
+                        chart.resize();
+                    }
+                }
+            }
+            //update current chart data
+            chart.data = datastructure;
+            chart.update();
+        }
+        return 0;
+    }
+    
     var drawChart = function (datastructure, labelToFq, $canvas, chartConfig, divId) {
         var chart;
+        // remain compatible with older config
+        var chartType = (chartConfig.chartType == 'horizontal-bar') ? 'horizontalBar' : chartConfig.chartType;
+        
         if (chartConfig.chart) {
+            adjustChartLabelsAndSize(datastructure, chartType, chartConfig, chartConfig.chart, divId);
             //update current chart data
             chartConfig.chart.data = datastructure;
             chartConfig.chart.update();
@@ -294,9 +375,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         } else {
             var ctx = $canvas.get(0).getContext("2d");
 
-            // remain compatible with older config
-            var chartType = (chartConfig.chartType == 'horizontal-bar') ? 'horizontalBar' : chartConfig.chartType;
-
+            
             var scales = getScales(chartType, chartConfig.maxValue, chartConfig.logarithmic);
 
             chart = new Chart(ctx, {
@@ -314,6 +393,8 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             if (chartType == 'pie' || chartType == 'doughnut' || chartConfig.seriesEnabled) {
                 $('#' + divId).find('.chart-legend').get(0).innerHTML = chart.generateLegend();
             }
+            
+            adjustChartLabelsAndSize(datastructure, chartType, chartConfig, chart, divId);
 
             $canvas.click(
                 function (evt) {
