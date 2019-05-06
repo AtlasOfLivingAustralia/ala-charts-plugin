@@ -87,8 +87,8 @@ To use the grails taglib to render the charts:
 ```
 <asset:script type="text/javascript">
     <charts:biocache
-        biocacheServiceUrl="http://biocache.ala.org.au/ws"
-        biocacheWebappUrl="http://biocache.ala.org.au"
+        biocacheServiceUrl="https://biocache-ws.ala.org.au/ws"
+        biocacheWebappUrl="https://biocache.ala.org.au"
         q="Macropus"
         qc=""
         fq=""
