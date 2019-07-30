@@ -1143,8 +1143,18 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         }
     });
 
+    // jquery-ui and bootstrap tooltip functionality are conflicting.
+    // The below code only calls bootstrap tooltip.
+    // https://github.com/AtlasOfLivingAustralia/collectory-plugin/issues/150
+    var tooltipFnName = 'tooltip';
+    if ($.fn.tooltip.noConflict) {
+        var bootstrapTooltip = $.fn.tooltip.noConflict();
+        $.fn.bootstrapTooltip = bootstrapTooltip;
+        tooltipFnName = "bootstrapTooltip";
+    }
+
     // activate BS tooltip (will work for dynamically generated content)
-    $('body').tooltip({
+    $('body')[tooltipFnName]({
         selector: '.hint'
     });
 };
