@@ -72,7 +72,8 @@ ALA.ChartConstants = {
  */
 ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
-    var _facets = [];
+    var _facets = [],
+        $i18n = chartOptions.$i18n || jQuery.i18n.prop;
 
     var getColor = function (keySeries, chartConfig, data) {
         var segmentColor = ALA.ChartConstants.colors[(keySeries + 1) % (ALA.ChartConstants.colors.length - 1)];
@@ -121,7 +122,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             if (overrideColor) segmentColor = "#97BBCD";
 
             datastructure.datasets[keySeries] = {
-                label: jQuery.i18n.prop(chartConfig.title),
+                label: $i18n(chartConfig.title),
                 backgroundColor: transparentColors(segmentColor,50),
                 data: []
             };
@@ -141,7 +142,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 if (result.label == null) result.label = "";
                 if (!(chartConfig.hideEmptyValues && result.label == "")/* && result["count"] > 0*/) {
 
-                    var i18n = jQuery.i18n.prop(result.label)
+                    var i18n = $i18n(result.label);
                     if(i18n.includes("[")){
                         i18n = result.label
                     }
@@ -396,15 +397,16 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             
             adjustChartLabelsAndSize(datastructure, chartType, chartConfig, chart, divId);
 
-            $canvas.click(
-                function (evt) {
-                    var activePoints = chart.getElementsAtEvent(evt);
-                    var chartLabels = Object.keys(labelToFq);
-                    var selectedKey = chartLabels[activePoints[0]._index];
-                    var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + chartOptions.query + "&fq=" + labelToFq[selectedKey];
-                    window.location.href = url;
-                }
-            );
+            if(!chartConfig.disableBiocacheQueryOnClick)
+                $canvas.click(
+                    function (evt) {
+                        var activePoints = chart.getElementsAtEvent(evt);
+                        var chartLabels = Object.keys(labelToFq);
+                        var selectedKey = chartLabels[activePoints[0]._index];
+                        var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + chartOptions.query + "&fq=" + labelToFq[selectedKey];
+                        window.location.href = url;
+                    }
+                );
         }
 
         return chart;
@@ -750,7 +752,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
     var createTextInput = function(label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+            append($('<label>' + $i18n(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append($('<input/>').addClass('chart-add-' + clas).val(value));
     };
 
@@ -762,13 +764,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         select.val(defaultValue);
 
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+            append($('<label>' + $i18n(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append(select);
     };
 
     var createCheckboxInput = function (label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+            append($('<label>' + $i18n(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append($('<input/>').addClass('chart-add-' + clas).attr('type', 'checkbox').prop('checked', value));
     };
 
