@@ -39,7 +39,8 @@ class ChartsTagLib {
     private Object getChartConfig() {
         if (chartsConfig == null) {
             def appName = Metadata.current.'info.app.name'
-            def configPath = "/data/${appName}/config/charts.json"
+            def pref = ${grailsApplication.config.charts.uriPrefix}
+            def configPath = pref+"/data/${appName}/config/charts.json"
             def js = new JsonSlurper()
             chartsConfig = js.parse(new FileReader(new File(configPath)))
         }
