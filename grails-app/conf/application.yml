@@ -12,4 +12,4 @@ info:
 environments:
     development:
         charts:
-            uriPrefix: c:/hugo/
+            uriPrefix: D:/reinhardt/firma/Biodiversity/working
