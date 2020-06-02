@@ -13,6 +13,7 @@ class ChartsTagLib {
     MessageSource messageSource
 
     static namespace = "charts"
+    static activeLocale = ""
 
     static chartsConfig = null
 
@@ -40,14 +41,15 @@ class ChartsTagLib {
     }
 
     private Object getChartConfig() {
-        if (chartsConfig == null) {
+        def locale = LocaleContextHolder.getLocale()
+        if (chartsConfig == null || !activeLocale.equalsIgnoreCase(locale.toString())) {
             def appName = Metadata.current.'info.app.name'
             def pref = grailsApplication.config.charts.uriPrefix?:''
 
             def configPath = "${pref}/data/${appName}/config/charts.json"
-            //def configPath = "/data/${appName}/config/charts.json"
             def js = new JsonSlurper()
             chartsConfig = js.parse(new FileReader(new File(configPath)))
+            activeLocale = locale.toString()
         }
 
         for (recList in chartsConfig) {
