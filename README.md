@@ -92,7 +92,9 @@ To use the grails taglib to render the charts:
         q="Macropus"
         qc=""
         fq=""
+        qualityProfile="" 
     />    
 </asset:script>
 
+Default qualityProfile is ALA_DEFAULT
 ```
