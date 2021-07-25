@@ -24,7 +24,7 @@ class ChartsTagLib {
             query : attrs.q ?: '*:*',                       // 'lsid:\"${tc.taxonConcept.guid}\"'
             queryContext : attrs.qc ?: '',                  // 'cl2:Scotland'
             facetQueries : attrs.fq ?: [],
-            qualityProfile : attrs.qualityProfile ?: 'ALA',
+            qualityProfile : attrs.qualityProfile ?: '',
             charts : getChartConfig().biocache,
             chartControls : attrs.chartControls ?: false,
             chartControlsCallback: attrs.chartControlsCallback

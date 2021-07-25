@@ -96,5 +96,4 @@ To use the grails taglib to render the charts:
     />    
 </asset:script>
 
-Default qualityProfile is ALA_DEFAULT
 ```
