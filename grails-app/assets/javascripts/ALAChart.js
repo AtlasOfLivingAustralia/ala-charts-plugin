@@ -402,7 +402,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                     var chartLabels = Object.keys(labelToFq);
                     var selectedKey = chartLabels[activePoints[0]._index];
                     var url = chartOptions.biocacheWebappUrl + "/occurrences/search?q=" + chartOptions.query + "&fq=" + labelToFq[selectedKey]
-                        + chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "";
+                        + (chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "");
                     window.location.href = url;
                 }
             );
@@ -509,7 +509,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         //default search service
         var queryUrl = chartOptions.biocacheServiceUrl + "/chart.json?q=" + query +
             x + xranges +"&qc=" + queryContext + valueParam + chartConfig.sliderFq + seriesRanges + series + seriesFq +
-            includeOther + includeOtherSeries + includeMissing + chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "";
+            includeOther + includeOtherSeries + includeMissing + (chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "");
 
         if(additionalFilter) {
             queryUrl = queryUrl + '&' + additionalFilter;
@@ -1014,7 +1014,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         //default search service
         var queryUrl = chartOptions.biocacheServiceUrl + "/occurrences/search.json?q=" + query + "&qc=" + queryContext +
-            "&pageSize=0&flimit=100&facet=true"+"&facets=" + facet + chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "";
+            "&pageSize=0&flimit=100&facet=true"+"&facets=" + facet + (chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "");
 
         if(additionalFilter) {
             queryUrl = queryUrl + '&' + additionalFilter;
