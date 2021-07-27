@@ -4,7 +4,7 @@ The grails2 branch contains the 1.3.x series of the plugin compatible with Grail
 
 The master branch hosts version 2.x and forward of the plugin compatible with grails 3.x
 
-
+The Angular-charts branch only support Angular application
 
 ## Why ?
 
