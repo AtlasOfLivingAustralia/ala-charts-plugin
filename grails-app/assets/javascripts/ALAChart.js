@@ -528,10 +528,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             success: function(data) {
                 dataCallback(data.data);
             },
-            error: function(data) {
-                //return no data instead of error
-                dataCallback([]);
-            },
             complete: function() {
                 if (divId) $('#' + divId).find('.chart-loading').hide();
             }
@@ -1028,10 +1024,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             },
             success: function(data) {
                 callback(data.facetResults[0].fieldResult);
-            },
-            error: function(data) {
-                //return no data instead of error
-                callback([]);
             }
         });
     };
