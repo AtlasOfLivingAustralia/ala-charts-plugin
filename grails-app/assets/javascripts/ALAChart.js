@@ -506,7 +506,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         if (!chartConfig.sliderFq) chartConfig.sliderFq = '';
 
-        var includeOther = (chartConfig.includeOther) ? "&xother=" + chartConfig.includeOther : "";
+        var includeOther = (chartConfig.includeOther) ? "&xother=" + chartConfig.includeOther : "&xother=false";
         var includeOtherSeries = (chartConfig.includeOtherSeries) ? "&seriesother=" + chartConfig.includeOtherSeries : "";
         var includeMissing = (chartConfig.hideEmptyValues) ? "&xmissing=" + (!chartConfig.hideEmptyValues) : "";
 
