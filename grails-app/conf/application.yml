@@ -12,4 +12,4 @@ info:
 environments:
     development:
         charts:
-            uriPrefix: D:/reinhardt/firma/Biodiversity/working
+            #uriPrefix: D:/reinhardt/firma/Biodiversity/working
