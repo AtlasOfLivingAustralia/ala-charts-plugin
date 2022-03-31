@@ -8,3 +8,8 @@ info:
         name: '@info.app.name@'
         version: '@info.app.version@'
         grailsVersion: '@info.app.grailsVersion@'
+
+environments:
+    development:
+        charts:
+            uriPrefix: D:/reinhardt/firma/Biodiversity/working
