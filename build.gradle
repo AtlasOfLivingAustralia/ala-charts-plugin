@@ -20,6 +20,7 @@ apply plugin:"org.grails.grails-gsp"
 
 repositories {
     mavenLocal()
+	maven { url "https://nexus.ala.org.au/content/groups/public/" }
     maven { url "https://repo.grails.org/grails/core" }
 }
 
@@ -61,8 +62,8 @@ dependencies {
 
 bootRun {
     jvmArgs(
-        '-Dspring.output.ansi.enabled=always', 
-        '-noverify', 
+        '-Dspring.output.ansi.enabled=always',
+        '-noverify',
         '-XX:TieredStopAtLevel=1',
         '-Xmx1024m')
     sourceResources sourceSets.main
@@ -80,6 +81,9 @@ bootJar.enabled = false
 
 grailsPublish {
     // TODO: Provide values here
+//    user = 'user'
+//    key = 'key'
+
     githubSlug = 'AtlasOfLivingAustralia/ala-charts-plugin'
     websiteUrl = 'https://github.com/AtlasOfLivingAustralia/ala-charts-plugin'
     license {
@@ -109,7 +113,7 @@ publishing {
         }
     }
     publications {
-        mavenJar(org.gradle.api.publish.maven.MavenPublication) {
+        mavenJar(MavenPublication) {
             pom.withXml {
                 def pomNode = asNode()
                 pomNode.dependencyManagement.replaceNode {}
@@ -124,6 +128,7 @@ publishing {
                 }
             }
             from components.java
+
         }
     }
 }
