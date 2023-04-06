@@ -89,6 +89,8 @@ assets {
     packagePlugin = true
 }
 
+compileJava.dependsOn(processResources)
+
 publishing {
     repositories {
         maven {
@@ -101,7 +103,7 @@ publishing {
         }
     }
     publications {
-        mavenJava(MavenPublication) {
+        maven(MavenPublication) {
             from components.java
         }
     }
