@@ -133,15 +133,21 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 datastructure.datasets[keySeries].hoverBorderColor = transparentColors(segmentColor, 85);
                 datastructure.datasets[keySeries].borderWidth = 1;
             }
-
-            if (chartConfig.facet != resultSeries.label) datastructure.datasets[keySeries].label = resultSeries.label
+            //if (chartConfig.facet != resultSeries.label) datastructure.datasets[keySeries].label = resultSeries.label
+            if (chartConfig.facet != resultSeries.label) datastructure.datasets[keySeries].label = jQuery.i18n.prop(resultSeries.label);
 
             $.each(resultSeries.data, function (key, result) {
 
                 if (result.label == null) result.label = "";
                 if (!(chartConfig.hideEmptyValues && result.label == "")/* && result["count"] > 0*/) {
 
-                    var i18n = jQuery.i18n.prop(result.label)
+                    //var i18n = jQuery.i18n.prop(result.label)
+                    var i18n = jQuery.i18n.prop(result.i18nCode)
+                    // workaround for assertions, because the entries without "assertion." already exist in the messages-properties
+                    if (result.i18nCode.startsWith("assertions"))
+                        i18n = jQuery.i18n.prop(result.i18nCode.substring(11));
+
+                    //console.log(key+" - " +result.label + " - " + i18n);
                     if(i18n.includes("[")){
                         i18n = result.label
                     }
@@ -273,7 +279,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
                 if (datastructure.datasets[0].data.length > 0) {
                     chartConfig.chart = drawChart(datastructure, labelToFq, $canvas, chartConfig, divId);
                 } else {
-                    $canvas.parent().append($("<label>No data to display</label>").addClass('chart-no-data-label'));
+                    $canvas.parent().append($("<label>"+chartOptions.chartNoDataLabel+"</label>").addClass('chart-no-data-label'));
 
                     $canvas.parent().find('.chart-canvas').detach();
                     $canvas.parent().find('.chart-legend').detach();
@@ -378,6 +384,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             
             var scales = getScales(chartType, chartConfig.maxValue, chartConfig.logarithmic);
 
+            //console.log(JSON.stringify(datastructure));
             chart = new Chart(ctx, {
                 type: chartType,
                 data: datastructure,
@@ -500,14 +507,14 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
         if (!chartConfig.sliderFq) chartConfig.sliderFq = '';
 
-        var includeOther = (chartConfig.includeOther) ? "&xother=" + chartConfig.includeOther : "";
+        var includeOther = (chartConfig.includeOther) ? "&xother=" + chartConfig.includeOther : "&xother=false";
         var includeOtherSeries = (chartConfig.includeOtherSeries) ? "&seriesother=" + chartConfig.includeOtherSeries : "";
         var includeMissing = (chartConfig.hideEmptyValues) ? "&xmissing=" + (!chartConfig.hideEmptyValues) : "";
 
         var x = (facet) ? "&x=" + facet : "";
 
         //default search service
-        var queryUrl = chartOptions.biocacheServiceUrl + "/chart.json?q=" + query +
+        var queryUrl = chartOptions.biocacheServiceUrl + "/chart?q=" + query +
             x + xranges +"&qc=" + queryContext + valueParam + chartConfig.sliderFq + seriesRanges + series + seriesFq +
             includeOther + includeOtherSeries + includeMissing + (chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "");
 
@@ -527,10 +534,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             },
             success: function(data) {
                 dataCallback(data.data);
-            },
-            error: function(data) {
-                //return no data instead of error
-                dataCallback([]);
             },
             complete: function() {
                 if (divId) $('#' + divId).find('.chart-loading').hide();
@@ -1013,7 +1016,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
     var getFacetValues = function(query, facetQueries, queryContext, additionalFilter, facet, callback) {
 
         //default search service
-        var queryUrl = chartOptions.biocacheServiceUrl + "/occurrences/search.json?q=" + query + "&qc=" + queryContext +
+        var queryUrl = chartOptions.biocacheServiceUrl + "/occurrences/search?q=" + query + "&qc=" + queryContext +
             "&pageSize=0&flimit=100&facet=true"+"&facets=" + facet + (chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "");
 
         if(additionalFilter) {
@@ -1028,10 +1031,6 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             },
             success: function(data) {
                 callback(data.facetResults[0].fieldResult);
-            },
-            error: function(data) {
-                //return no data instead of error
-                callback([]);
             }
         });
     };
@@ -1185,7 +1184,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
     //init facets before controls
     $.ajax({
-        url: chartOptions.biocacheServiceUrl + '/index/fields.json',
+        url: chartOptions.biocacheServiceUrl + '/index/fields',
         type: 'GET',
         error: function(xhr, status, error) {
             console.log('unable to get index/fields')
