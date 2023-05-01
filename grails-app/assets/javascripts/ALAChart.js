@@ -514,7 +514,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         var x = (facet) ? "&x=" + facet : "";
 
         //default search service
-        var queryUrl = chartOptions.biocacheServiceUrl + "/chart.json?q=" + query +
+        var queryUrl = chartOptions.biocacheServiceUrl + "/chart?q=" + query +
             x + xranges +"&qc=" + queryContext + valueParam + chartConfig.sliderFq + seriesRanges + series + seriesFq +
             includeOther + includeOtherSeries + includeMissing + (chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "");
 
@@ -1016,7 +1016,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
     var getFacetValues = function(query, facetQueries, queryContext, additionalFilter, facet, callback) {
 
         //default search service
-        var queryUrl = chartOptions.biocacheServiceUrl + "/occurrences/search.json?q=" + query + "&qc=" + queryContext +
+        var queryUrl = chartOptions.biocacheServiceUrl + "/occurrences/search?q=" + query + "&qc=" + queryContext +
             "&pageSize=0&flimit=100&facet=true"+"&facets=" + facet + (chartOptions.qualityProfile ? "&qualityProfile=" + chartOptions.qualityProfile : "");
 
         if(additionalFilter) {
@@ -1184,7 +1184,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
     //init facets before controls
     $.ajax({
-        url: chartOptions.biocacheServiceUrl + '/index/fields.json',
+        url: chartOptions.biocacheServiceUrl + '/index/fields',
         type: 'GET',
         error: function(xhr, status, error) {
             console.log('unable to get index/fields')

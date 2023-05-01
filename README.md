@@ -6,6 +6,7 @@ The master branch hosts version 2.x and forward of the plugin compatible with gr
 
 The Angular-charts branch only support Angular application
 
+
 ## Why ?
 
 Charts are used in multiple places within the Atlas.
@@ -18,6 +19,9 @@ services (e.g. logger services, ecodata services).
 
 * 1.3.x is built with grails 2.5.x and supports bootstrap 3
 * 1.4.x is built with grails 3.x and supports bootstrap 3
+* 2.2 is built with grails 4.x and supports bootstrap 3
+* 2.1-ANGULAR-4 is a AngularJS version built with grails 4.x and supports bootstrap 3
+* 2.3 is built with grails 5.x and supports bootstrap 3
 
 ## Usage instructions
 

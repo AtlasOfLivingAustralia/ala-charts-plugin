@@ -1,89 +1,102 @@
 buildscript {
     repositories {
         mavenLocal()
-		maven { url "https://nexus.ala.org.au/content/groups/public/" }
+        maven { url "https://nexus.ala.org.au/content/groups/public/" }
         maven { url "https://repo.grails.org/grails/core" }
     }
     dependencies {
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.14.2"
+        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.4.6"
     }
 }
 
-version "2.1.2"
+version "2.3.0-SNAPSHOT"
 group "au.org.ala.plugins.grails"
 
 apply plugin:"eclipse"
 apply plugin:"idea"
 apply plugin:"org.grails.grails-plugin"
-apply plugin:"org.grails.grails-plugin-publish"
+apply plugin:"com.bertramlabs.asset-pipeline"
 apply plugin:"org.grails.grails-gsp"
-apply plugin:"asset-pipeline"
 apply plugin:"maven-publish"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
 
 repositories {
     mavenLocal()
-	maven { url "https://nexus.ala.org.au/content/groups/public/" }
+    maven { url "https://nexus.ala.org.au/content/groups/public/" }
     maven { url "https://repo.grails.org/grails/core" }
 }
 
+configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+}
+
 dependencies {
-    compile "org.springframework.boot:spring-boot-starter-logging"
-    compile "org.springframework.boot:spring-boot-autoconfigure"
-    compile "org.grails:grails-core"
-    compile "org.springframework.boot:spring-boot-starter-actuator"
-    compile "org.springframework.boot:spring-boot-starter-tomcat"
-    compile "org.grails:grails-dependencies"
-    compile "org.grails:grails-web-boot"
-    compile "org.grails.plugins:cache"
-    compile "org.grails.plugins:scaffolding"
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    implementation "org.springframework.boot:spring-boot-starter-logging"
+    implementation "org.springframework.boot:spring-boot-autoconfigure"
+    implementation  "org.grails:grails-core"
+    implementation  "org.springframework.boot:spring-boot-starter-actuator"
+    implementation  "org.springframework.boot:spring-boot-starter-tomcat"
+    implementation  "org.grails:grails-web-boot"
+    implementation  "org.grails:grails-logging"
+    implementation  "org.grails:grails-plugin-rest"
+    implementation  "org.grails:grails-plugin-databinding"
+    implementation  "org.grails:grails-plugin-i18n"
+    implementation  "org.grails:grails-plugin-services"
+    implementation  "org.grails:grails-plugin-url-mappings"
+    implementation  "org.grails:grails-plugin-interceptors"
+    implementation  "org.grails.plugins:cache"
+    implementation  "org.grails.plugins:async"
+    implementation  "org.grails.plugins:scaffolding"
+    implementation  "org.grails.plugins:events"
+    implementation  "org.grails.plugins:gsp"
+    compileOnly "io.micronaut:micronaut-inject-groovy"
     console "org.grails:grails-console"
-    profile "org.grails.profiles:web-plugin"
-    provided "org.grails:grails-plugin-services"
-    provided "org.grails:grails-plugin-domain-class"
-    runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.14.2"
-    testCompile "org.grails:grails-plugin-testing"
-    testCompile "org.grails.plugins:geb"
-    testRuntime "org.seleniumhq.selenium:selenium-htmlunit-driver:2.47.1"
-    testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"
+    profile "org.grails.profiles:web"
+    testImplementation "io.micronaut:micronaut-inject-groovy"
+    runtimeOnly  "org.glassfish.web:el-impl:2.1.2-b03"
+    runtimeOnly  "org.apache.tomcat:tomcat-jdbc"
+    runtimeOnly  "javax.xml.bind:jaxb-api:2.3.0"
+    runtimeOnly "com.bertramlabs.plugins:asset-pipeline-grails:3.4.6"
 }
 
 bootRun {
-    jvmArgs('-Dspring.output.ansi.enabled=always')
-    addResources = true
+    jvmArgs(
+        '-Dspring.output.ansi.enabled=always',
+        '-noverify',
+        '-XX:TieredStopAtLevel=1',
+        '-Xmx1024m')
+    sourceResources sourceSets.main
+    String springProfilesActive = 'spring.profiles.active'
+    systemProperty springProfilesActive, System.getProperty(springProfilesActive)
 }
+
+assets {
+    minifyJs = true
+    minifyCss = true
+}
+
 // enable if you wish to package this plugin as a standalone application
-bootRepackage.enabled = false
-grailsPublish {
-    // TODO: Provide values here
-//    user = 'user'
-//    key = 'key'
-
-    githubSlug = 'AtlasOfLivingAustralia/ala-charts-plugin'
-    websiteUrl = 'https://github.com/AtlasOfLivingAustralia/ala-charts-plugin'
-    license {
-        name = 'MPL-1.1'
-    }
-    issueTrackerUrl = 'https://github.com/AtlasOfLivingAustralia/ala-charts-plugin/issues'
-    vcsUrl = 'https://github.com/AtlasOfLivingAustralia/ala-charts-plugin'
-    title = "ALA Images Client Plugin"
-    desc = "This plugin provides a reusable image viewer component based on Leaflet"
-    developers = [:]
-}
-
+bootJar.enabled = false
 
 assets {
     packagePlugin = true
 }
 
+compileJava.dependsOn(processResources)
+
 publishing {
     repositories {
         maven {
             name 'Nexus'
-            url "https://nexus.ala.org.au/content/repositories/${project.version.endsWith('-SNAPSHOT') ? 'snapshots' : 'releases' }"
+            url "https://nexus.ala.org.au/content/repositories/${project.version.endsWith('-SNAPSHOT') ? 'snapshots' : 'releases'}"
             credentials {
                 username = System.getenv('TRAVIS_DEPLOY_USERNAME')
                 password = System.getenv('TRAVIS_DEPLOY_PASSWORD')
@@ -91,22 +104,10 @@ publishing {
         }
     }
     publications {
-        mavenJar(MavenPublication) {
-            pom.withXml {
-                def pomNode = asNode()
-                pomNode.dependencyManagement.replaceNode {}
-
-                // simply remove dependencies without a version
-                // version-less dependencies are handled with dependencyManagement
-                // see https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/8 for more complete solutions
-                pomNode.dependencies.dependency.findAll {
-                    it.version.text().isEmpty()
-                }.each {
-                    it.replaceNode {}
-                }
-            }
+        maven(MavenPublication) {
             from components.java
-
         }
     }
 }
+
+
