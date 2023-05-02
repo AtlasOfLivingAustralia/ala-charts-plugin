@@ -121,7 +121,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
             if (overrideColor) segmentColor = "#97BBCD";
 
             datastructure.datasets[keySeries] = {
-                label: jQuery.i18n.prop(chartConfig.title),
+                label: chartConfig.title,
                 backgroundColor: transparentColors(segmentColor,50),
                 data: []
             };
@@ -140,13 +140,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
                 if (result.label == null) result.label = "";
                 if (!(chartConfig.hideEmptyValues && result.label == "")/* && result["count"] > 0*/) {
-
-                    var i18n = jQuery.i18n.prop(result.label)
-                    if(i18n.includes("[")){
-                        i18n = result.label
-                    }
-
-                    var prettifiedLabel = i18n.substring(0, 80);
+                    var prettifiedLabel = result.label.substring(0, 80);
                     if (result.label.trim() == "") {
                         prettifiedLabel = chartConfig.emptyValueMsg ? chartConfig.emptyValueMsg : 'Not available';
                     }
@@ -751,7 +745,7 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
 
     var createTextInput = function(label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append($('<input/>').addClass('chart-add-' + clas).val(value));
     };
 
@@ -763,13 +757,13 @@ ALA.BiocacheCharts = function (chartsDivId, chartOptions) {
         select.val(defaultValue);
 
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append(select);
     };
 
     var createCheckboxInput = function (label, clas, value, hint) {
         return $('<div/>').addClass('chart-add-group').
-            append($('<label>' + jQuery.i18n.prop(label) + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
+            append($('<label>' + label + '</label>').addClass('chart-add-label').append(createHintIcon(hint))).
             append($('<input/>').addClass('chart-add-' + clas).attr('type', 'checkbox').prop('checked', value));
     };
 
